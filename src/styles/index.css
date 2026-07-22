@@ -2,14 +2,12 @@
 
 @layer base {
   :root {
-    --bg-page: #080808;
-    --bg-card: rgba(255, 255, 255, 0.045);
-    --bg-card-solid: #121212;
-    --bg-input: #121212;
+    --bg-page: #060606;
+    --bg-input: #111111;
     
     --border-subtle: rgba(255, 255, 255, 0.10);
-    --border-hover: rgba(255, 255, 255, 0.20);
-    --border-focus: rgba(255, 255, 255, 0.45);
+    --border-hover: rgba(255, 255, 255, 0.22);
+    --border-focus: rgba(255, 255, 255, 0.50);
     
     --text-primary: #f5f5f5;
     --text-secondary: #a3a3a3;
@@ -17,9 +15,6 @@
     
     --btn-primary-bg: #f5f5f5;
     --btn-primary-text: #050505;
-    
-    --error: #f87171;
-    --success: #34d399;
   }
 
   body {
@@ -37,32 +32,99 @@
   }
 }
 
-/* Monochrome Glass Material */
-.monochrome-glass {
-  background-color: var(--bg-card);
-  backdrop-filter: blur(24px) saturate(120%);
-  -webkit-backdrop-filter: blur(24px) saturate(120%);
-  border: 1px solid var(--border-subtle);
+/* Glass Level 1 — Main Authentication / Profile Card */
+.glass-level-1 {
+  background-color: rgba(255, 255, 255, 0.055);
+  backdrop-filter: blur(26px) saturate(125%);
+  -webkit-backdrop-filter: blur(26px) saturate(125%);
+  border: 1px solid rgba(255, 255, 255, 0.13);
   border-radius: 1rem;
-  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 32px 100px rgba(0, 0, 0, 0.50), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+  position: relative;
+  overflow: hidden;
 }
 
-/* Reduced transparency fallback */
+/* Initial subtle sheen animation on glass entry */
+.glass-level-1::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.05) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  pointer-events: none;
+  animation: initialSheen 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes initialSheen {
+  0% { left: -100%; }
+  100% { left: 200%; }
+}
+
+/* Glass Level 2 — Success modal / overlay / toast */
+.glass-level-2 {
+  background-color: rgba(20, 20, 20, 0.75);
+  backdrop-filter: blur(20px) saturate(120%);
+  -webkit-backdrop-filter: blur(20px) saturate(120%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 1rem;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.60), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+}
+
+/* Glass Level 3 — Small status elements / badges */
+.glass-level-3 {
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* Solid fallbacks for prefers-reduced-transparency */
 @media (prefers-reduced-transparency: reduce) {
-  .monochrome-glass {
-    background-color: var(--bg-card-solid);
+  .glass-level-1 {
+    background-color: #121212;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .glass-level-2 {
+    background-color: #161616;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .glass-level-3 {
+    background-color: #1a1a1a;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
   }
 }
 
-/* Input Fields & Autofill Override */
+/* Form Controls & High Precision States */
+.form-input-container {
+  position: relative;
+  transition: transform 0.15s ease;
+}
+
+.form-input-container:focus-within {
+  transform: translateY(-1px);
+}
+
 .form-input {
   background-color: var(--bg-input);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
   border-radius: 0.625rem;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+
+.form-input:hover:not(:disabled) {
+  border-color: var(--border-hover);
 }
 
 .form-input:focus {
@@ -80,33 +142,36 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus,
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 1000px #121212 inset !important;
+  -webkit-box-shadow: 0 0 0 1000px #111111 inset !important;
   -webkit-text-fill-color: #f5f5f5 !important;
   caret-color: #f5f5f5 !important;
   border-color: var(--border-subtle) !important;
 }
 
-/* Primary Button */
+/* Primary Button Microinteractions */
 .btn-primary {
   background-color: var(--btn-primary-bg);
   color: var(--btn-primary-text);
   font-weight: 600;
   border-radius: 0.625rem;
-  transition: background-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
   background-color: #ffffff;
-  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.12);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
 }
 
 .btn-primary:active:not(:disabled) {
-  transform: scale(0.985);
+  transform: translateY(0) scale(0.985);
 }
 
 .btn-primary:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 /* Secondary Button */
@@ -122,34 +187,33 @@ input:-webkit-autofill:active {
 .btn-secondary:hover:not(:disabled) {
   background-color: rgba(255, 255, 255, 0.09);
   border-color: var(--border-hover);
+  transform: translateY(-1px);
 }
 
 .btn-secondary:active:not(:disabled) {
-  transform: scale(0.985);
+  transform: translateY(0) scale(0.985);
 }
 
-/* Animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(4px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Shaking animation on invalid input submit */
+@keyframes shakeOnce {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.animate-shake-once {
+  animation: shakeOnce 0.35s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
 }
 
-/* Reduced motion support */
+/* Reduced Motion Override */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+  .glass-level-1::before {
+    display: none;
   }
 }

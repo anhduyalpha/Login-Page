@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { PrimaryButton, SecondaryButton } from '../components/PrimaryButton';
 import { AlertMessage } from '../components/AlertMessage';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
   Mail, 
@@ -11,7 +12,8 @@ import {
   Edit3, 
   Save, 
   LogOut,
-  ShieldCheck
+  ShieldCheck,
+  Check
 } from 'lucide-react';
 
 export const ProfilePage = () => {
@@ -19,6 +21,7 @@ export const ProfilePage = () => {
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -49,8 +52,12 @@ export const ProfilePage = () => {
         bio,
         updatedAt: new Date().toISOString()
       });
+      setSaveSuccess(true);
       setSuccessMessage('Cập nhật thông tin cá nhân thành công!');
-      setIsEditing(false);
+      setTimeout(() => {
+        setSaveSuccess(false);
+        setIsEditing(false);
+      }, 500);
     } catch (err) {
       setErrorMessage(err.message || 'Không thể cập nhật thông tin. Vui lòng thử lại.');
     } finally {
@@ -69,18 +76,18 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-6 animate-fade-in">
+    <div className="w-full max-w-2xl mx-auto space-y-6">
       
       {/* Messages */}
       {successMessage && <AlertMessage type="success" message={successMessage} />}
       {errorMessage && <AlertMessage type="error" message={errorMessage} />}
 
       {/* Header Profile Identity Glass Card */}
-      <div className="p-6 sm:p-8 monochrome-glass space-y-6">
+      <div className="p-6 sm:p-8 glass-level-1 space-y-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
           
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="w-20 h-20 rounded-full border border-white/20 p-1 bg-[#121212] shrink-0">
+            <div className="w-20 h-20 rounded-full border border-white/20 p-1 bg-[#111111] shrink-0">
               <img 
                 src="/avatar.svg" 
                 alt="Avatar" 
@@ -97,7 +104,7 @@ export const ProfilePage = () => {
                 <span>{emailDisplay}</span>
               </p>
               <div className="pt-1 flex items-center justify-center sm:justify-start">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-[#f5f5f5] text-[11px]">
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-[#f5f5f5] text-[11px] glass-level-3">
                   <ShieldCheck className="w-3 h-3 text-emerald-400" />
                   <span>Đã xác thực</span>
                 </span>
@@ -131,7 +138,7 @@ export const ProfilePage = () => {
       </div>
 
       {/* Information Glass Card */}
-      <div className="p-6 sm:p-8 monochrome-glass space-y-6">
+      <div className="p-6 sm:p-8 glass-level-1 space-y-6">
         <div className="flex items-center justify-between border-b border-white/10 pb-3">
           <h2 className="text-sm font-semibold text-[#f5f5f5] flex items-center gap-2">
             <User className="w-4 h-4 text-[#a3a3a3]" />
@@ -150,20 +157,24 @@ export const ProfilePage = () => {
               <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
                 Họ và tên đệm
               </label>
-              {isEditing ? (
-                <input
-                  id="input-first-name"
-                  type="text"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="VD: Nguyễn Văn"
-                  className="form-input w-full py-2 px-3 text-sm"
-                />
-              ) : (
-                <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#f5f5f5]">
-                  {firstName || <span className="text-[#737373] italic">Chưa nhập</span>}
-                </div>
-              )}
+              <AnimatePresence mode="wait">
+                {isEditing ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <input
+                      id="input-first-name"
+                      type="text"
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="VD: Nguyễn Văn"
+                      className="form-input w-full py-2 px-3 text-sm"
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-2.5 rounded-lg bg-[#111111] border border-white/10 text-sm text-[#f5f5f5]">
+                    {firstName || <span className="text-[#737373] italic">Chưa nhập</span>}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Field 2: Tên */}
@@ -171,20 +182,24 @@ export const ProfilePage = () => {
               <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
                 Tên
               </label>
-              {isEditing ? (
-                <input
-                  id="input-last-name"
-                  type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="VD: A"
-                  className="form-input w-full py-2 px-3 text-sm"
-                />
-              ) : (
-                <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#f5f5f5]">
-                  {lastName || <span className="text-[#737373] italic">Chưa nhập</span>}
-                </div>
-              )}
+              <AnimatePresence mode="wait">
+                {isEditing ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <input
+                      id="input-last-name"
+                      type="text"
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="VD: A"
+                      className="form-input w-full py-2 px-3 text-sm"
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-2.5 rounded-lg bg-[#111111] border border-white/10 text-sm text-[#f5f5f5]">
+                    {lastName || <span className="text-[#737373] italic">Chưa nhập</span>}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Field 3: Email */}
@@ -192,7 +207,7 @@ export const ProfilePage = () => {
               <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
                 Email
               </label>
-              <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#a3a3a3] flex items-center gap-2 break-all">
+              <div className="p-2.5 rounded-lg bg-[#111111] border border-white/10 text-sm text-[#a3a3a3] flex items-center gap-2 break-all">
                 <Mail className="w-3.5 h-3.5 text-[#737373] shrink-0" />
                 <span>{emailDisplay}</span>
               </div>
@@ -203,21 +218,25 @@ export const ProfilePage = () => {
               <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
                 Số điện thoại
               </label>
-              {isEditing ? (
-                <input
-                  id="input-phone"
-                  type="text"
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+84 912 345 678"
-                  className="form-input w-full py-2 px-3 text-sm"
-                />
-              ) : (
-                <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#f5f5f5] flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-[#737373] shrink-0" />
-                  <span>{phone || <span className="text-[#737373] italic">Chưa nhập</span>}</span>
-                </div>
-              )}
+              <AnimatePresence mode="wait">
+                {isEditing ? (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                    <input
+                      id="input-phone"
+                      type="text"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+84 912 345 678"
+                      className="form-input w-full py-2 px-3 text-sm"
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-2.5 rounded-lg bg-[#111111] border border-white/10 text-sm text-[#f5f5f5] flex items-center gap-2">
+                    <Phone className="w-3.5 h-3.5 text-[#737373] shrink-0" />
+                    <span>{phone || <span className="text-[#737373] italic">Chưa nhập</span>}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
           </div>
@@ -227,21 +246,25 @@ export const ProfilePage = () => {
             <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
               Địa chỉ
             </label>
-            {isEditing ? (
-              <textarea
-                id="input-address"
-                rows={2}
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                placeholder="Nhập địa chỉ"
-                className="form-input w-full py-2 px-3 text-sm resize-none"
-              />
-            ) : (
-              <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#f5f5f5] flex items-start gap-2">
-                <MapPin className="w-3.5 h-3.5 text-[#737373] mt-0.5 shrink-0" />
-                <span>{address || <span className="text-[#737373] italic">Chưa nhập</span>}</span>
-              </div>
-            )}
+            <AnimatePresence mode="wait">
+              {isEditing ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <textarea
+                    id="input-address"
+                    rows={2}
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    placeholder="Nhập địa chỉ"
+                    className="form-input w-full py-2 px-3 text-sm resize-none"
+                  />
+                </motion.div>
+              ) : (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-2.5 rounded-lg bg-[#111111] border border-white/10 text-sm text-[#f5f5f5] flex items-start gap-2">
+                  <MapPin className="w-3.5 h-3.5 text-[#737373] mt-0.5 shrink-0" />
+                  <span>{address || <span className="text-[#737373] italic">Chưa nhập</span>}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Field 6: Bio */}
@@ -249,21 +272,25 @@ export const ProfilePage = () => {
             <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
               Giới thiệu bản thân (Bio)
             </label>
-            {isEditing ? (
-              <textarea
-                id="input-bio"
-                rows={3}
-                value={bio}
-                onChange={(e) => setBio(e.target.value)}
-                placeholder="Nhập phần giới thiệu ngắn..."
-                className="form-input w-full py-2 px-3 text-sm resize-none"
-              />
-            ) : (
-              <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#f5f5f5] flex items-start gap-2 leading-relaxed">
-                <FileText className="w-3.5 h-3.5 text-[#737373] mt-0.5 shrink-0" />
-                <span>{bio || <span className="text-[#737373] italic">Chưa nhập</span>}</span>
-              </div>
-            )}
+            <AnimatePresence mode="wait">
+              {isEditing ? (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <textarea
+                    id="input-bio"
+                    rows={3}
+                    value={bio}
+                    onChange={(e) => setBio(e.target.value)}
+                    placeholder="Nhập phần giới thiệu ngắn..."
+                    className="form-input w-full py-2 px-3 text-sm resize-none"
+                  />
+                </motion.div>
+              ) : (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="p-2.5 rounded-lg bg-[#111111] border border-white/10 text-sm text-[#f5f5f5] flex items-start gap-2 leading-relaxed">
+                  <FileText className="w-3.5 h-3.5 text-[#737373] mt-0.5 shrink-0" />
+                  <span>{bio || <span className="text-[#737373] italic">Chưa nhập</span>}</span>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Edit action controls */}
@@ -272,9 +299,24 @@ export const ProfilePage = () => {
               <SecondaryButton onClick={handleCancelEdit}>
                 Hủy
               </SecondaryButton>
-              <PrimaryButton id="btn-submit-save-profile" type="submit" loading={saving} className="w-auto px-5">
-                <Save className="w-3.5 h-3.5" />
-                <span>Lưu thông tin</span>
+              <PrimaryButton 
+                id="btn-submit-save-profile" 
+                type="submit" 
+                loading={saving} 
+                success={saveSuccess}
+                className="w-auto px-5"
+              >
+                {saveSuccess ? (
+                  <>
+                    <Check className="w-3.5 h-3.5" />
+                    <span>Đã lưu</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    <span>Lưu thông tin</span>
+                  </>
+                )}
               </PrimaryButton>
             </div>
           )}

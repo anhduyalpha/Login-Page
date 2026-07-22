@@ -1,5 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export const PasswordMeter = ({ password = '', confirmPassword = '' }) => {
   const rules = [
@@ -17,24 +18,36 @@ export const PasswordMeter = ({ password = '', confirmPassword = '' }) => {
         {rules.map((rule, idx) => (
           <div 
             key={idx} 
-            className={`flex items-center gap-1.5 text-[11px] ${
-              rule.valid ? 'text-emerald-400 font-medium' : 'text-[#737373]'
-            }`}
+            className="flex items-center gap-1.5 text-[11px]"
           >
-            <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
-              rule.valid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-[#737373]'
-            }`}>
+            <motion.div 
+              animate={{ 
+                backgroundColor: rule.valid ? 'rgba(52, 211, 153, 0.2)' : 'rgba(255, 255, 255, 0.1)',
+                color: rule.valid ? '#34d399' : '#737373'
+              }}
+              transition={{ duration: 0.18 }}
+              className="w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] shrink-0"
+            >
               {rule.valid ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : '•'}
-            </div>
-            <span>{rule.label}</span>
+            </motion.div>
+            <motion.span
+              animate={{ color: rule.valid ? '#34d399' : '#737373' }}
+              transition={{ duration: 0.18 }}
+            >
+              {rule.label}
+            </motion.span>
           </div>
         ))}
       </div>
 
       {confirmPassword.length > 0 && (
-        <div className={`flex items-center gap-1.5 text-[11px] pt-1 ${
-          isMatch ? 'text-emerald-400' : 'text-red-400'
-        }`}>
+        <motion.div 
+          initial={{ opacity: 0, y: -2 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`flex items-center gap-1.5 text-[11px] pt-1 ${
+            isMatch ? 'text-emerald-400' : 'text-red-400'
+          }`}
+        >
           {isMatch ? (
             <>
               <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -46,7 +59,7 @@ export const PasswordMeter = ({ password = '', confirmPassword = '' }) => {
               <span>Mật khẩu nhập lại chưa khớp</span>
             </>
           )}
-        </div>
+        </motion.div>
       )}
     </div>
   );

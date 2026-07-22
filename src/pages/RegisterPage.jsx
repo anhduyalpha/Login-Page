@@ -18,15 +18,18 @@ export const RegisterPage = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  // Compact rules verification
+  // Live password rules verification
   const isPasswordValid = 
     password.length >= 8 &&
     /[A-Z]/.test(password) &&
     /[a-z]/.test(password) &&
     /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+
+  const isEmailValid = email.trim().includes('@');
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
@@ -51,7 +54,11 @@ export const RegisterPage = () => {
     setSubmitting(true);
     try {
       await register(cleanEmail, password);
-      setShowSuccessModal(true);
+      setIsSuccess(true);
+      setTimeout(() => {
+        setIsSuccess(false);
+        setShowSuccessModal(true);
+      }, 400);
     } catch (err) {
       setErrorMessage(err.message || 'Đăng ký thất bại. Vui lòng thử lại.');
     } finally {
@@ -69,7 +76,7 @@ export const RegisterPage = () => {
   return (
     <AuthCard
       title="Tạo tài khoản"
-      subtitle="Nhập thông tin cá nhân của bạn để tạo tài khoản mới"
+      subtitle="Nhập thông tin cá nhân của bạn để khởi tạo truy cập"
     >
       {/* Success Modal displaying exact title "Successfully" */}
       {showSuccessModal && (
@@ -94,6 +101,7 @@ export const RegisterPage = () => {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="name@example.com"
           autoComplete="email"
+          isValid={isEmailValid}
           icon={Mail}
         />
 
@@ -122,7 +130,7 @@ export const RegisterPage = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#f5f5f5] focus:outline-none rounded transition-colors"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#f5f5f5] focus:outline-none rounded transition-colors cursor-pointer"
               aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -157,7 +165,7 @@ export const RegisterPage = () => {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#f5f5f5] focus:outline-none rounded transition-colors"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#f5f5f5] focus:outline-none rounded transition-colors cursor-pointer"
               aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -170,6 +178,7 @@ export const RegisterPage = () => {
           id="btn-submit-register"
           type="submit"
           loading={submitting}
+          success={isSuccess}
           className="mt-2"
         >
           Tạo tài khoản

@@ -14,7 +14,10 @@ export const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
 
   const [submitting, setSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+
+  const isEmailValid = email.trim().includes('@');
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
@@ -29,9 +32,9 @@ export const LoginPage = () => {
     setSubmitting(true);
     try {
       await login(cleanEmail, password);
+      setIsSuccess(true);
     } catch (err) {
       setErrorMessage(err.message || 'Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.');
-    } finally {
       setSubmitting(false);
     }
   };
@@ -59,6 +62,7 @@ export const LoginPage = () => {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="name@example.com"
           autoComplete="email"
+          isValid={isEmailValid}
           icon={Mail}
         />
 
@@ -87,7 +91,7 @@ export const LoginPage = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#f5f5f5] focus:outline-none rounded transition-colors"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#f5f5f5] focus:outline-none rounded transition-colors cursor-pointer"
               aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -100,6 +104,7 @@ export const LoginPage = () => {
           id="btn-submit-login"
           type="submit"
           loading={submitting}
+          success={isSuccess}
           className="mt-2"
         >
           Đăng nhập
