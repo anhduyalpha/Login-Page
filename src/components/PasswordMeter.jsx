@@ -1,30 +1,41 @@
 import React from 'react';
-import { Check, ShieldAlert } from 'lucide-react';
+import { Check } from 'lucide-react';
 
 export const PasswordMeter = ({ password = '', confirmPassword = '' }) => {
-  const checks = [
-    { label: 'Ít nhất 6 ký tự', valid: password.length >= 6 },
-    { label: 'Gồm chữ cái hoặc số', valid: /[a-zA-Z0-9]/.test(password) }
+  const rules = [
+    { label: 'Ít nhất 8 ký tự', valid: password.length >= 8 },
+    { label: '1 chữ hoa (A-Z)', valid: /[A-Z]/.test(password) },
+    { label: '1 chữ thường (a-z)', valid: /[a-z]/.test(password) },
+    { label: '1 ký tự đặc biệt (!@#$...)', valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) }
   ];
 
   const isMatch = confirmPassword.length > 0 && confirmPassword === password;
   const isMismatch = confirmPassword.length > 0 && confirmPassword !== password;
 
   return (
-    <div className="mt-2 space-y-2 text-xs">
-      <div className="flex items-center gap-3">
-        {checks.map((item, index) => (
-          <div key={index} className={`flex items-center gap-1.5 font-mono ${item.valid ? 'text-emerald-400' : 'text-slate-500'}`}>
-            <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${item.valid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-slate-800 text-slate-600'}`}>
-              {item.valid ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : '•'}
+    <div className="mt-2.5 space-y-2 text-xs">
+      <div className="grid grid-cols-2 gap-1.5 pt-1">
+        {rules.map((rule, idx) => (
+          <div 
+            key={idx} 
+            className={`flex items-center gap-1.5 text-[11px] font-mono ${
+              rule.valid ? 'text-emerald-400 font-medium' : 'text-[#64748b]'
+            }`}
+          >
+            <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[9px] ${
+              rule.valid ? 'bg-emerald-500/20 text-emerald-400' : 'bg-[#1e293b] text-[#475569]'
+            }`}>
+              {rule.valid ? <Check className="w-2.5 h-2.5 stroke-[3]" /> : '•'}
             </div>
-            <span>{item.label}</span>
+            <span>{rule.label}</span>
           </div>
         ))}
       </div>
 
       {confirmPassword.length > 0 && (
-        <div className={`flex items-center gap-1.5 font-mono ${isMatch ? 'text-emerald-400' : 'text-red-400'}`}>
+        <div className={`flex items-center gap-1.5 text-[11px] font-mono pt-1 ${
+          isMatch ? 'text-emerald-400' : 'text-red-400'
+        }`}>
           {isMatch ? (
             <>
               <Check className="w-3.5 h-3.5 text-emerald-400" />
@@ -32,7 +43,7 @@ export const PasswordMeter = ({ password = '', confirmPassword = '' }) => {
             </>
           ) : (
             <>
-              <ShieldAlert className="w-3.5 h-3.5 text-red-400" />
+              <span className="w-1.5 h-1.5 rounded-full bg-red-400"></span>
               <span>Mật khẩu nhập lại chưa khớp</span>
             </>
           )}
