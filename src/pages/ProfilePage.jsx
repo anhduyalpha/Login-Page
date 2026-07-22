@@ -8,12 +8,11 @@ import {
   Edit3, 
   Save, 
   Lock,
-  Loader2,
-  Camera
+  Loader2
 } from 'lucide-react';
 
 export const ProfilePage = () => {
-  const { currentUser, updateProfile, logout } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
 
   const [isEditing, setIsEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -23,15 +22,6 @@ export const ProfilePage = () => {
   const [lastName, setLastName] = useState(currentUser?.lastName || 'A');
   const [phone, setPhone] = useState(currentUser?.phone || '+84 912 345 678');
   const [address, setAddress] = useState(currentUser?.address || 'Tầng 12, Tòa nhà Bitexco Financial Tower, Quận 1, TP. Hồ Chí Minh');
-  const [avatarIndex, setAvatarIndex] = useState(0);
-
-  // Avatar preset gradients
-  const avatarGradients = [
-    'from-cyan-500 via-blue-600 to-violet-600',
-    'from-emerald-400 via-teal-600 to-cyan-700',
-    'from-amber-400 via-orange-500 to-red-600',
-    'from-purple-500 via-pink-500 to-rose-600'
-  ];
 
   const usernameDisplay = currentUser?.displayName || currentUser?.email?.split('@')[0] || 'baochinhvus';
   const emailDisplay = currentUser?.email || 'baochinhvus@gmail.com';
@@ -73,24 +63,15 @@ export const ProfilePage = () => {
             {/* User Avatar & Identity Details */}
             <div className="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
               <div className="relative group">
-                <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr ${avatarGradients[avatarIndex]} p-[3px] shadow-xl shadow-cyan-500/20`}>
+                <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-tr from-cyan-500 via-blue-600 to-violet-600 p-[2.5px] shadow-xl shadow-cyan-500/20">
                   <div className="w-full h-full bg-[#0b0f17] rounded-full flex items-center justify-center overflow-hidden">
-                    <span className="text-2xl sm:text-3xl font-extrabold font-heading text-white tracking-widest uppercase">
-                      {usernameDisplay.slice(0, 2)}
-                    </span>
+                    <img 
+                      src="/avatar.svg" 
+                      alt="Default Avatar" 
+                      className="w-full h-full object-cover rounded-full" 
+                    />
                   </div>
                 </div>
-
-                {isEditing && (
-                  <button 
-                    type="button"
-                    onClick={() => setAvatarIndex((avatarIndex + 1) % avatarGradients.length)}
-                    className="absolute bottom-0 right-0 p-2 rounded-full bg-cyan-500 text-white shadow-lg hover:scale-110 transition-transform"
-                    aria-label="Đổi màu đại diện"
-                  >
-                    <Camera className="w-3.5 h-3.5" />
-                  </button>
-                )}
               </div>
 
               <div className="space-y-1">

@@ -6,6 +6,13 @@ import {
   signOut, 
   updateProfile
 } from 'firebase/auth';
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  getDoc,
+  updateDoc
+} from 'firebase/firestore';
 
 // Check if a real custom Firebase API key is provided
 const rawApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
@@ -22,11 +29,13 @@ const firebaseConfig = {
 
 let app;
 let auth;
+let db;
 
 if (hasRealFirebaseConfig) {
   try {
     app = initializeApp(firebaseConfig);
     auth = getAuth(app);
+    db = getFirestore(app);
   } catch (error) {
     console.warn("Firebase initialization failed, using local storage engine:", error);
   }
@@ -93,24 +102,39 @@ const setDemoCurrentUser = (user) => {
   } catch (e) {}
 };
 
-// Register User Operation
+// Register User Operation with Firestore Document Creation (NO PASSWORD STORED)
 export const registerUser = async (email, password) => {
   const cleanEmail = email.trim().toLowerCase();
 
   if (hasRealFirebaseConfig && auth) {
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-      const user = {
-        uid: userCredential.user.uid,
-        email: userCredential.user.email,
-        displayName: userCredential.user.displayName || cleanEmail.split('@')[0],
+      const uid = userCredential.user.uid;
+      const usernameFromEmail = cleanEmail.split('@')[0];
+
+      // Profile Document WITHOUT password
+      const profileData = {
+        uid,
+        email: cleanEmail,
+        displayName: usernameFromEmail,
         firstName: '',
         lastName: '',
         phone: '',
-        address: ''
+        address: '',
+        createdAt: new Date().toISOString()
       };
-      setDemoCurrentUser(user);
-      return { success: true, user };
+
+      // Create document in Firestore users/{uid}
+      if (db) {
+        try {
+          await setDoc(doc(db, "users", uid), profileData);
+        } catch (dbErr) {
+          console.warn("Firestore setDoc warning:", dbErr);
+        }
+      }
+
+      setDemoCurrentUser(profileData);
+      return { success: true, user: profileData, uid };
     } catch (error) {
       if (error.code === 'auth/email-already-in-use' || error.code === 'auth/invalid-email' || error.code === 'auth/weak-password') {
         throw new Error(translateFirebaseError(error.code));
@@ -128,8 +152,11 @@ export const registerUser = async (email, password) => {
   }
 
   const usernameFromEmail = cleanEmail.split('@')[0];
+  const uid = 'user_' + Date.now();
+  
+  // Profile Document WITHOUT password
   const newUser = {
-    uid: 'user_' + Date.now(),
+    uid,
     email: cleanEmail,
     displayName: usernameFromEmail,
     firstName: '',
@@ -144,18 +171,19 @@ export const registerUser = async (email, password) => {
   saveDemoUsers(users);
   setDemoCurrentUser(newUser);
 
-  return { success: true, user: newUser };
+  return { success: true, user: newUser, uid };
 };
 
-// Login User Operation
+// Login User Operation with Firestore Profile Retrieval
 export const loginUser = async (email, password) => {
   const cleanEmail = email.trim().toLowerCase();
 
   if (hasRealFirebaseConfig && auth) {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, password);
-      const user = {
-        uid: userCredential.user.uid,
+      const uid = userCredential.user.uid;
+      let user = {
+        uid,
         email: userCredential.user.email,
         displayName: userCredential.user.displayName || cleanEmail.split('@')[0],
         firstName: '',
@@ -163,6 +191,19 @@ export const loginUser = async (email, password) => {
         phone: '',
         address: ''
       };
+
+      // Load profile document from Firestore users/{uid}
+      if (db) {
+        try {
+          const userDoc = await getDoc(doc(db, "users", uid));
+          if (userDoc.exists()) {
+            user = { ...user, ...userDoc.data() };
+          }
+        } catch (dbErr) {
+          console.warn("Firestore getDoc warning:", dbErr);
+        }
+      }
+
       setDemoCurrentUser(user);
       return { success: true, user };
     } catch (error) {
@@ -179,7 +220,6 @@ export const loginUser = async (email, password) => {
   const foundUser = users.find(u => u.email.toLowerCase() === cleanEmail);
 
   if (!foundUser) {
-    // If no user exists yet, register automatically or return invalid credentials error
     throw new Error(translateFirebaseError('auth/user-not-found'));
   }
 
@@ -198,7 +238,7 @@ export const logoutUser = async () => {
   return { success: true };
 };
 
-// Update Profile Data
+// Update Profile Data in Firestore and Auth
 export const updateUserProfileData = async (profileData) => {
   const currentUser = getDemoCurrentUser();
   if (!currentUser) throw new Error("Chưa đăng nhập.");
@@ -227,6 +267,9 @@ export const updateUserProfileData = async (profileData) => {
       await updateProfile(auth.currentUser, {
         displayName: updatedUser.displayName
       });
+      if (db) {
+        await updateDoc(doc(db, "users", currentUser.uid), profileData);
+      }
     } catch (e) {}
   }
 
@@ -237,4 +280,4 @@ export const getCurrentAuthUser = () => {
   return getDemoCurrentUser();
 };
 
-export { auth };
+export { auth, db };
