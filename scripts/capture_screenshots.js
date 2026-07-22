@@ -13,7 +13,7 @@ if (!fs.existsSync(screenshotsDir)) {
 }
 
 async function capture() {
-  console.log('Starting final 10-screenshot capture pipeline...');
+  console.log('Starting bulletproof screenshot capture pipeline...');
   
   const browser = await puppeteer.launch({
     headless: true,
@@ -48,31 +48,26 @@ async function capture() {
 
     // 3. Register Validation State
     await setViewportDesktop();
-    await page.waitForSelector('#register-email');
     await page.type('#register-email', 'invalid-email');
-    await page.type('#register-password', 'Pass123!');
-    await page.type('#register-confirm-password', 'Pass1234!');
+    await page.type('#register-password', '123');
+    await page.type('#register-confirm-password', '1234');
+    await page.click('#btn-submit-register');
     await new Promise(r => setTimeout(r, 500));
     await page.screenshot({ path: path.join(screenshotsDir, 'register-validation.png') });
     console.log('Captured register-validation.png');
 
-    // 4. Register Success State
+    // 4. Register Success & Profile Navigation
     await page.reload({ waitUntil: 'networkidle2' });
     await page.waitForSelector('#register-email');
     const uniqueEmail = `user_${Date.now()}@aetherauth.com`;
     await page.type('#register-email', uniqueEmail);
-    await page.type('#register-password', 'AetherAuth@2026');
-    await page.type('#register-confirm-password', 'AetherAuth@2026');
+    await page.type('#register-password', 'AetherAuth2026');
+    await page.type('#register-confirm-password', 'AetherAuth2026');
     await page.click('#btn-submit-register');
     
-    await new Promise(r => setTimeout(r, 1200));
+    await page.waitForSelector('#btn-edit-profile', { timeout: 5000 });
     await page.screenshot({ path: path.join(screenshotsDir, 'register-success.png') });
     console.log('Captured register-success.png');
-
-    // Click redirect button in modal
-    const btnGo = await page.$('#btn-go-to-profile');
-    if (btnGo) await btnGo.click();
-    await new Promise(r => setTimeout(r, 1500));
 
     // 8. Profile Desktop
     await setViewportDesktop();
@@ -86,13 +81,12 @@ async function capture() {
 
     // 10. Profile Edit Mode
     await setViewportDesktop();
-    const editBtn = await page.$('#btn-edit-profile');
-    if (editBtn) await editBtn.click();
+    await page.click('#btn-edit-profile');
     await new Promise(r => setTimeout(r, 500));
     await page.screenshot({ path: path.join(screenshotsDir, 'profile-edit.png') });
     console.log('Captured profile-edit.png');
 
-    // Logout / Clear session for Login tests
+    // Clear session to test Login
     await page.evaluate(() => localStorage.clear());
     await page.reload({ waitUntil: 'networkidle2' });
     await page.waitForSelector('#link-go-to-login');
@@ -111,11 +105,10 @@ async function capture() {
 
     // 7. Login Error State
     await setViewportDesktop();
-    await page.waitForSelector('#login-email');
     await page.type('#login-email', 'nonexistent@aetherauth.com');
     await page.type('#login-password', 'wrongpass');
     await page.click('#btn-submit-login');
-    await new Promise(r => setTimeout(r, 1200));
+    await new Promise(r => setTimeout(r, 800));
     await page.screenshot({ path: path.join(screenshotsDir, 'login-error.png') });
     console.log('Captured login-error.png');
 

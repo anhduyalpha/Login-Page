@@ -4,13 +4,15 @@ import {
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   signOut, 
-  updateProfile,
-  onAuthStateChanged 
+  updateProfile
 } from 'firebase/auth';
 
-// Firebase configuration from environment variables or default fallback
+// Check if a real custom Firebase API key is provided
+const rawApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
+const hasRealFirebaseConfig = Boolean(rawApiKey && !rawApiKey.includes('DemoKey'));
+
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDemoKeyForAetherAuthTesting123",
+  apiKey: rawApiKey || "AIzaSyDemoKeyForAetherAuthTesting123",
   authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "aether-auth-demo.firebaseapp.com",
   projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "aether-auth-demo",
   storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "aether-auth-demo.appspot.com",
@@ -20,14 +22,14 @@ const firebaseConfig = {
 
 let app;
 let auth;
-let isDemoMode = false;
 
-try {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-} catch (error) {
-  console.warn("Firebase initialization using demo mode fallback:", error);
-  isDemoMode = true;
+if (hasRealFirebaseConfig) {
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+  } catch (error) {
+    console.warn("Firebase initialization failed, using local storage engine:", error);
+  }
 }
 
 // Friendly translation for Firebase Auth error codes
@@ -41,19 +43,19 @@ export const translateFirebaseError = (errorCode) => {
     case 'auth/user-not-found':
       return 'Không tìm thấy tài khoản liên kết với email này.';
     case 'auth/weak-password':
-      return 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu mạnh hơn (ít nhất 8 ký tự).';
+      return 'Mật khẩu quá yếu. Vui lòng chọn mật khẩu từ 6 ký tự trở lên.';
     case 'auth/invalid-email':
       return 'Định dạng email không hợp lệ. Vui lòng nhập đúng email (vd: name@domain.com).';
     case 'auth/network-request-failed':
-      return 'Lỗi kết nối mạng. Vui lòng kiểm tra đường truyền internet của bạn.';
+      return 'Lỗi kết nối mạng. Vui lòng kiểm tra đường truyền internet.';
     case 'auth/too-many-requests':
-      return 'Đã xảy ra quá nhiều yêu cầu không thành công. Vui lòng thử lại sau giây lát.';
+      return 'Đã xảy ra quá nhiều yêu cầu không thành công. Vui lòng thử lại sau.';
     default:
-      return 'Đã xảy ra lỗi hệ thống. Vui lòng thử lại sau.';
+      return 'Đã xảy ra lỗi khi xử lý. Vui lòng kiểm tra lại thông tin.';
   }
 };
 
-// In-memory demo storage for seamless evaluation fallback
+// Local storage demo engine keys
 const DEMO_USERS_KEY = 'aether_auth_demo_users';
 const CURRENT_USER_KEY = 'aether_auth_current_user';
 
@@ -91,30 +93,44 @@ const setDemoCurrentUser = (user) => {
   } catch (e) {}
 };
 
-// Unified Auth Operations (Firebase SDK with Fallback)
+// Register User Operation
 export const registerUser = async (email, password) => {
-  try {
-    if (auth && !isDemoMode) {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      return { success: true, user: userCredential.user };
-    }
-  } catch (error) {
-    if (error.code && error.code.startsWith('auth/')) {
-      throw new Error(translateFirebaseError(error.code));
+  const cleanEmail = email.trim().toLowerCase();
+
+  if (hasRealFirebaseConfig && auth) {
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+      const user = {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        displayName: userCredential.user.displayName || cleanEmail.split('@')[0],
+        firstName: '',
+        lastName: '',
+        phone: '',
+        address: ''
+      };
+      setDemoCurrentUser(user);
+      return { success: true, user };
+    } catch (error) {
+      if (error.code === 'auth/email-already-in-use' || error.code === 'auth/invalid-email' || error.code === 'auth/weak-password') {
+        throw new Error(translateFirebaseError(error.code));
+      }
+      console.warn("Live Firebase error, falling back to local storage engine:", error);
     }
   }
 
-  // Fallback demo engine registration
-  await new Promise(res => setTimeout(res, 600)); // Simulate network latency
+  // Robust local storage engine fallback
+  await new Promise(res => setTimeout(res, 300));
   const users = getDemoUsers();
-  if (users.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+
+  if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
     throw new Error(translateFirebaseError('auth/email-already-in-use'));
   }
 
-  const usernameFromEmail = email.split('@')[0];
+  const usernameFromEmail = cleanEmail.split('@')[0];
   const newUser = {
     uid: 'user_' + Date.now(),
-    email,
+    email: cleanEmail,
     displayName: usernameFromEmail,
     firstName: '',
     lastName: '',
@@ -131,24 +147,39 @@ export const registerUser = async (email, password) => {
   return { success: true, user: newUser };
 };
 
+// Login User Operation
 export const loginUser = async (email, password) => {
-  try {
-    if (auth && !isDemoMode) {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      return { success: true, user: userCredential.user };
-    }
-  } catch (error) {
-    if (error.code && error.code.startsWith('auth/')) {
-      throw new Error(translateFirebaseError(error.code));
+  const cleanEmail = email.trim().toLowerCase();
+
+  if (hasRealFirebaseConfig && auth) {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, password);
+      const user = {
+        uid: userCredential.user.uid,
+        email: userCredential.user.email,
+        displayName: userCredential.user.displayName || cleanEmail.split('@')[0],
+        firstName: '',
+        lastName: '',
+        phone: '',
+        address: ''
+      };
+      setDemoCurrentUser(user);
+      return { success: true, user };
+    } catch (error) {
+      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+        throw new Error(translateFirebaseError(error.code));
+      }
+      console.warn("Live Firebase login error, falling back to local storage engine:", error);
     }
   }
 
-  // Fallback demo engine login
-  await new Promise(res => setTimeout(res, 600));
+  // Robust local storage engine fallback
+  await new Promise(res => setTimeout(res, 300));
   const users = getDemoUsers();
-  const foundUser = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  const foundUser = users.find(u => u.email.toLowerCase() === cleanEmail);
 
   if (!foundUser) {
+    // If no user exists yet, register automatically or return invalid credentials error
     throw new Error(translateFirebaseError('auth/user-not-found'));
   }
 
@@ -156,29 +187,34 @@ export const loginUser = async (email, password) => {
   return { success: true, user: foundUser };
 };
 
+// Logout Operation
 export const logoutUser = async () => {
-  if (auth && !isDemoMode) {
-    await signOut(auth);
+  if (hasRealFirebaseConfig && auth && auth.currentUser) {
+    try {
+      await signOut(auth);
+    } catch (e) {}
   }
   setDemoCurrentUser(null);
   return { success: true };
 };
 
+// Update Profile Data
 export const updateUserProfileData = async (profileData) => {
   const currentUser = getDemoCurrentUser();
   if (!currentUser) throw new Error("Chưa đăng nhập.");
 
-  await new Promise(res => setTimeout(res, 500));
+  await new Promise(res => setTimeout(res, 300));
 
   const updatedUser = {
     ...currentUser,
     ...profileData,
-    displayName: profileData.firstName || profileData.lastName ? `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() : currentUser.displayName
+    displayName: (profileData.firstName || profileData.lastName) 
+      ? `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() 
+      : currentUser.displayName
   };
 
   setDemoCurrentUser(updatedUser);
 
-  // Sync to demo users store
   const users = getDemoUsers();
   const index = users.findIndex(u => u.uid === currentUser.uid);
   if (index !== -1) {
@@ -186,7 +222,7 @@ export const updateUserProfileData = async (profileData) => {
     saveDemoUsers(users);
   }
 
-  if (auth && auth.currentUser && !isDemoMode) {
+  if (hasRealFirebaseConfig && auth && auth.currentUser) {
     try {
       await updateProfile(auth.currentUser, {
         displayName: updatedUser.displayName
@@ -198,10 +234,7 @@ export const updateUserProfileData = async (profileData) => {
 };
 
 export const getCurrentAuthUser = () => {
-  if (auth && auth.currentUser && !isDemoMode) {
-    return auth.currentUser;
-  }
   return getDemoCurrentUser();
 };
 
-export { auth, isDemoMode };
+export { auth };

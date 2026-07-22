@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { PasswordMeter } from '../components/PasswordMeter';
-import { SuccessModal } from '../components/SuccessModal';
 import { Mail, Lock, Eye, EyeOff, ArrowRight, AlertCircle, Loader2 } from 'lucide-react';
 
 export const RegisterPage = () => {
@@ -15,7 +14,6 @@ export const RegisterPage = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
@@ -40,7 +38,8 @@ export const RegisterPage = () => {
     setSubmitting(true);
     try {
       await register(cleanEmail, password);
-      setShowSuccessModal(true);
+      // Navigate directly to profile page upon successful registration
+      navigateTo('profile');
     } catch (err) {
       setErrorMessage(err.message || 'Đăng ký thất bại. Vui lòng thử lại.');
     } finally {
@@ -50,11 +49,7 @@ export const RegisterPage = () => {
 
   return (
     <div className="w-full min-h-[calc(100vh-80px)] py-12 px-4 flex items-center justify-center">
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <SuccessModal onComplete={() => navigateTo('profile')} />
-      )}
-
+      
       {/* Centered Registration Card */}
       <div className="w-full max-w-md mx-auto p-8 rounded-3xl glass-panel border border-white/10 shadow-2xl space-y-6">
         
