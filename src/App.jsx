@@ -1,7 +1,6 @@
 import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Navbar } from './components/Navbar';
-import { Footer } from './components/Footer';
 import { NotificationToast } from './components/NotificationToast';
 import { RegisterPage } from './pages/RegisterPage';
 import { LoginPage } from './pages/LoginPage';
@@ -16,7 +15,7 @@ const MainContent = () => {
       <div className="min-h-screen flex items-center justify-center bg-obsidian text-cyan-400">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="w-10 h-10 animate-spin" />
-          <span className="font-mono text-sm tracking-wider">Đang khởi tạo AetherAuth...</span>
+          <span className="font-mono text-sm tracking-wider">Đang khởi tạo...</span>
         </div>
       </div>
     );
@@ -35,8 +34,6 @@ const MainContent = () => {
         {currentView === 'login' && <LoginPage />}
         {currentView === 'profile' && <ProfilePage />}
       </main>
-
-      <Footer />
 
       <NotificationToast />
     </div>
