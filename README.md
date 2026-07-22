@@ -1,18 +1,19 @@
-# AuthPortal - Refined Minimalist Authentication System
+# AuthPortal - Monochrome Glass Authentication System
 
 An authentic, production-ready, minimalist identity and authentication application built with **React 19**, **Vite**, **Tailwind CSS v4**, **Lucide Icons**, and **Firebase Authentication & Firestore**.
 
-Designed under the **"Quiet Precision"** visual framework derived from the `design-taste-frontend` skill guidelines.
+Designed under the final visual framework: **“Monochrome Glass — Quiet Professionalism”** derived from the `design-taste-frontend` skill guidelines.
 
 ---
 
-## ✨ Design Principles & Architecture
+## ✨ Design Direction: Monochrome Glass — Quiet Professionalism
 
-- **Aesthetic**: Deep charcoal palette (`#090d16` background, `#0f172a` surface cards), high-contrast typography, restrained indigo accent (`#6366f1`), 1px subtle borders (`#1e293b`).
+- **Aesthetic**: Pure, disciplined black-and-white visual system. Deep near-black background (`#080808`), translucent glass surface cards (`rgba(255, 255, 255, 0.045)` with `backdrop-filter: blur(24px) saturate(120%)`), thin translucent borders (`rgba(255, 255, 255, 0.10)`), soft white text (`#f5f5f5`), and cool gray secondary text (`#a3a3a3`).
+- **Material System**: Controlled glass properties with solid-color fallback (`#121212`) for systems with `prefers-reduced-transparency`. Glass is applied strictly to primary container surfaces, avoiding excessive blur on individual buttons or text inputs.
+- **Button System**: Crisp white high-contrast primary CTA buttons (`#f5f5f5` background, `#050505` text) with subtle press scale feedback (`active:scale-[0.985]`).
+- **Focus & Form Controls**: High-contrast white focus ring (`box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15)`), custom Chrome autofill override (`-webkit-autofill` background set to `#121212`), keyboard-accessible password toggle controls with `aria-label` attributes.
 - **Focus**: Dedicated exclusively to three core pages (`/register`, `/login`, `/profile`). Zero marketing fluff, zero promotional security banners, zero fake metrics.
-- **Form Engineering**: Accessible form controls, single-line desktop CTAs, scannable 4-point password criteria checklist (8+ chars, uppercase, lowercase, special char).
 - **Exact Success State**: Modal confirmation displaying the exact required title string **`Successfully`**, automatic user `signOut`, and redirect to `/login`.
-- **Firestore Integration**: User profiles are stored at `users/{uid}` without storing passwords. On login, profile data is loaded directly from Firestore.
 
 ---
 
@@ -34,19 +35,12 @@ npm run dev
 
 Visit `http://localhost:3000` to interact with the application.
 
-### Production Build & Preview
+### Production Build & Verification
 
 ```bash
 # Build production bundle
 npm run build
 
-# Preview build locally
-npm run preview
-```
-
-### Automated Verification & Screenshot Capture
-
-```bash
 # Execute 12-step strict Firebase & Firestore verification script
 node scripts/verify_strict_firebase.js
 
@@ -62,11 +56,11 @@ All 10 required PNG screenshots are stored in `docs/screenshots/`:
 
 | Screen ID | Filename | Description |
 |---|---|---|
-| `register-desktop` | [register-desktop.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/register-desktop.png) | Centered register card on 1440px desktop |
+| `register-desktop` | [register-desktop.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/register-desktop.png) | Centered monochrome glass register card on 1440px desktop |
 | `register-mobile` | [register-mobile.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/register-mobile.png) | Responsive mobile register view (375px) |
-| `register-validation` | [register-validation.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/register-validation.png) | Scannable password criteria & error validation |
-| `register-success` | [register-success.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/register-success.png) | Confirmation modal with exact text `Successfully` |
-| `login-desktop` | [login-desktop.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/login-desktop.png) | Returning user login view |
+| `register-validation` | [register-validation.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/register-validation.png) | Compact password criteria & inline error validation |
+| `register-success` | [register-success.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/register-success.png) | Glass confirmation modal with exact text `Successfully` |
+| `login-desktop` | [login-desktop.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/login-desktop.png) | Returning user monochrome login view |
 | `login-mobile` | [login-mobile.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/login-mobile.png) | Mobile viewport login layout |
 | `login-error` | [login-error.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/login-error.png) | Friendly inline error alert banner |
 | `profile-desktop` | [profile-desktop.png](file:///c:/Users/Duy/Code/Project/Webdevs/Login-Page/docs/screenshots/profile-desktop.png) | Personal information dashboard (View Mode) |
@@ -79,7 +73,7 @@ All 10 required PNG screenshots are stored in `docs/screenshots/`:
 
 | Metric | Result | Notes |
 |---|---|---|
-| `npm run build` | **PASS** | 1619 modules transformed in 9.95s with 0 errors |
+| `npm run build` | **PASS** | 1619 modules transformed in 9.07s with 0 errors |
 | Strict Firebase Test | **PASS** | 12/12 steps verified with automated Puppeteer script |
 | Accessibility (WCAG AA) | **PASS** | Accessible contrast, focus rings, single-line CTAs |
 | Mobile Viewport (320px–375px) | **PASS** | Zero horizontal scroll, touch targets &ge; 44px |

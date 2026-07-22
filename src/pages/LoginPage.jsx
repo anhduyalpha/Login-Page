@@ -39,7 +39,7 @@ export const LoginPage = () => {
   return (
     <AuthCard
       title="Đăng nhập"
-      subtitle="Nhập thông tin đăng nhập của bạn để truy cập tài khoản"
+      subtitle="Nhập thông tin tài khoản của bạn để truy cập hệ thống"
     >
       {/* Error Alert */}
       {errorMessage && (
@@ -66,12 +66,12 @@ export const LoginPage = () => {
         <div className="space-y-1.5">
           <label 
             htmlFor="login-password" 
-            className="block text-xs font-medium text-[#94a3b8] uppercase tracking-wider font-sans"
+            className="block text-xs font-medium text-[#a3a3a3]"
           >
-            Mật khẩu <span className="text-indigo-400">*</span>
+            Mật khẩu <span className="text-[#f5f5f5]">*</span>
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#64748b]">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
               <Lock className="w-4 h-4" />
             </div>
             <input
@@ -87,7 +87,7 @@ export const LoginPage = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#64748b] hover:text-white"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#f5f5f5] focus:outline-none rounded transition-colors"
               aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -107,13 +107,13 @@ export const LoginPage = () => {
       </form>
 
       {/* Register Link */}
-      <div className="pt-3 border-t border-[#1e293b] text-center text-xs text-[#94a3b8]">
+      <div className="pt-3 border-t border-white/10 text-center text-xs text-[#a3a3a3]">
         Chưa có tài khoản?{' '}
         <button
           id="link-go-to-register"
           type="button"
           onClick={() => navigateTo('register')}
-          className="text-indigo-400 font-semibold hover:text-indigo-300 hover:underline transition-colors"
+          className="text-white font-semibold hover:underline underline-offset-4 transition-colors cursor-pointer"
         >
           Đăng ký ngay
         </button>

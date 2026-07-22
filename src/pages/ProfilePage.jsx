@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { FormField } from '../components/FormField';
 import { PrimaryButton, SecondaryButton } from '../components/PrimaryButton';
 import { AlertMessage } from '../components/AlertMessage';
 import { 
@@ -70,18 +69,18 @@ export const ProfilePage = () => {
   };
 
   return (
-    <div className="w-full max-w-2xl mx-auto space-y-6">
+    <div className="w-full max-w-2xl mx-auto space-y-6 animate-fade-in">
       
       {/* Messages */}
       {successMessage && <AlertMessage type="success" message={successMessage} />}
       {errorMessage && <AlertMessage type="error" message={errorMessage} />}
 
-      {/* Header Profile Identity Card */}
-      <div className="p-6 sm:p-8 auth-card space-y-6">
+      {/* Header Profile Identity Glass Card */}
+      <div className="p-6 sm:p-8 monochrome-glass space-y-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
           
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="w-20 h-20 rounded-full border border-[#1e293b] p-1 bg-[#090d16] shrink-0">
+            <div className="w-20 h-20 rounded-full border border-white/20 p-1 bg-[#121212] shrink-0">
               <img 
                 src="/avatar.svg" 
                 alt="Avatar" 
@@ -90,16 +89,16 @@ export const ProfilePage = () => {
             </div>
 
             <div className="space-y-1">
-              <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+              <h1 className="text-xl sm:text-2xl font-bold text-[#f5f5f5] tracking-tight">
                 {fullNameDisplay}
               </h1>
-              <p className="text-xs font-mono text-[#94a3b8] flex items-center justify-center sm:justify-start gap-1.5">
-                <Mail className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <p className="text-xs text-[#a3a3a3] flex items-center justify-center sm:justify-start gap-1.5 break-all">
+                <Mail className="w-3.5 h-3.5 text-[#a3a3a3] shrink-0" />
                 <span>{emailDisplay}</span>
               </p>
               <div className="pt-1 flex items-center justify-center sm:justify-start">
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[11px] font-mono">
-                  <ShieldCheck className="w-3 h-3" />
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 border border-white/15 text-[#f5f5f5] text-[11px]">
+                  <ShieldCheck className="w-3 h-3 text-emerald-400" />
                   <span>Đã xác thực</span>
                 </span>
               </div>
@@ -120,7 +119,7 @@ export const ProfilePage = () => {
 
             <button
               onClick={logout}
-              className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 text-xs font-medium transition-colors flex items-center gap-1.5 min-h-[38px]"
+              className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 text-xs font-medium transition-colors flex items-center gap-1.5 min-h-[38px] cursor-pointer"
               aria-label="Đăng xuất"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -131,14 +130,14 @@ export const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Information Form Card */}
-      <div className="p-6 sm:p-8 auth-card space-y-6">
-        <div className="flex items-center justify-between border-b border-[#1e293b] pb-3">
-          <h2 className="text-sm font-semibold text-white uppercase tracking-wider font-sans flex items-center gap-2">
-            <User className="w-4 h-4 text-indigo-400" />
+      {/* Information Glass Card */}
+      <div className="p-6 sm:p-8 monochrome-glass space-y-6">
+        <div className="flex items-center justify-between border-b border-white/10 pb-3">
+          <h2 className="text-sm font-semibold text-[#f5f5f5] flex items-center gap-2">
+            <User className="w-4 h-4 text-[#a3a3a3]" />
             <span>Thông tin cá nhân</span>
           </h2>
-          <span className="text-xs font-mono text-[#64748b]">
+          <span className="text-xs text-[#737373]">
             {isEditing ? 'Chế độ chỉnh sửa' : 'Chế độ xem'}
           </span>
         </div>
@@ -148,7 +147,7 @@ export const ProfilePage = () => {
             
             {/* Field 1: Họ và tên đệm */}
             <div>
-              <label className="block text-xs font-medium text-[#94a3b8] uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
                 Họ và tên đệm
               </label>
               {isEditing ? (
@@ -161,15 +160,15 @@ export const ProfilePage = () => {
                   className="form-input w-full py-2 px-3 text-sm"
                 />
               ) : (
-                <div className="p-2.5 rounded-lg bg-[#131d31] border border-[#1e293b] text-sm text-[#f8fafc]">
-                  {firstName || <span className="text-[#64748b] italic">Chưa nhập</span>}
+                <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#f5f5f5]">
+                  {firstName || <span className="text-[#737373] italic">Chưa nhập</span>}
                 </div>
               )}
             </div>
 
             {/* Field 2: Tên */}
             <div>
-              <label className="block text-xs font-medium text-[#94a3b8] uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
                 Tên
               </label>
               {isEditing ? (
@@ -182,26 +181,26 @@ export const ProfilePage = () => {
                   className="form-input w-full py-2 px-3 text-sm"
                 />
               ) : (
-                <div className="p-2.5 rounded-lg bg-[#131d31] border border-[#1e293b] text-sm text-[#f8fafc]">
-                  {lastName || <span className="text-[#64748b] italic">Chưa nhập</span>}
+                <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#f5f5f5]">
+                  {lastName || <span className="text-[#737373] italic">Chưa nhập</span>}
                 </div>
               )}
             </div>
 
             {/* Field 3: Email */}
             <div>
-              <label className="block text-xs font-medium text-[#94a3b8] uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
                 Email
               </label>
-              <div className="p-2.5 rounded-lg bg-[#090d16] border border-[#1e293b] text-sm text-[#64748b] font-mono flex items-center gap-2">
-                <Mail className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
+              <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#a3a3a3] flex items-center gap-2 break-all">
+                <Mail className="w-3.5 h-3.5 text-[#737373] shrink-0" />
                 <span>{emailDisplay}</span>
               </div>
             </div>
 
             {/* Field 4: Số điện thoại */}
             <div>
-              <label className="block text-xs font-medium text-[#94a3b8] uppercase tracking-wider mb-1.5">
+              <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
                 Số điện thoại
               </label>
               {isEditing ? (
@@ -214,9 +213,9 @@ export const ProfilePage = () => {
                   className="form-input w-full py-2 px-3 text-sm"
                 />
               ) : (
-                <div className="p-2.5 rounded-lg bg-[#131d31] border border-[#1e293b] text-sm text-[#f8fafc] flex items-center gap-2">
-                  <Phone className="w-3.5 h-3.5 text-indigo-400 shrink-0" />
-                  <span>{phone || <span className="text-[#64748b] italic">Chưa nhập</span>}</span>
+                <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#f5f5f5] flex items-center gap-2">
+                  <Phone className="w-3.5 h-3.5 text-[#737373] shrink-0" />
+                  <span>{phone || <span className="text-[#737373] italic">Chưa nhập</span>}</span>
                 </div>
               )}
             </div>
@@ -225,7 +224,7 @@ export const ProfilePage = () => {
 
           {/* Field 5: Địa chỉ */}
           <div>
-            <label className="block text-xs font-medium text-[#94a3b8] uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
               Địa chỉ
             </label>
             {isEditing ? (
@@ -238,16 +237,16 @@ export const ProfilePage = () => {
                 className="form-input w-full py-2 px-3 text-sm resize-none"
               />
             ) : (
-              <div className="p-2.5 rounded-lg bg-[#131d31] border border-[#1e293b] text-sm text-[#f8fafc] flex items-start gap-2">
-                <MapPin className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" />
-                <span>{address || <span className="text-[#64748b] italic">Chưa nhập</span>}</span>
+              <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#f5f5f5] flex items-start gap-2">
+                <MapPin className="w-3.5 h-3.5 text-[#737373] mt-0.5 shrink-0" />
+                <span>{address || <span className="text-[#737373] italic">Chưa nhập</span>}</span>
               </div>
             )}
           </div>
 
           {/* Field 6: Bio */}
           <div>
-            <label className="block text-xs font-medium text-[#94a3b8] uppercase tracking-wider mb-1.5">
+            <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
               Giới thiệu bản thân (Bio)
             </label>
             {isEditing ? (
@@ -260,16 +259,16 @@ export const ProfilePage = () => {
                 className="form-input w-full py-2 px-3 text-sm resize-none"
               />
             ) : (
-              <div className="p-2.5 rounded-lg bg-[#131d31] border border-[#1e293b] text-sm text-[#f8fafc] flex items-start gap-2 leading-relaxed">
-                <FileText className="w-3.5 h-3.5 text-indigo-400 mt-0.5 shrink-0" />
-                <span>{bio || <span className="text-[#64748b] italic">Chưa nhập</span>}</span>
+              <div className="p-2.5 rounded-lg bg-[#121212] border border-white/10 text-sm text-[#f5f5f5] flex items-start gap-2 leading-relaxed">
+                <FileText className="w-3.5 h-3.5 text-[#737373] mt-0.5 shrink-0" />
+                <span>{bio || <span className="text-[#737373] italic">Chưa nhập</span>}</span>
               </div>
             )}
           </div>
 
           {/* Edit action controls */}
           {isEditing && (
-            <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#1e293b]">
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
               <SecondaryButton onClick={handleCancelEdit}>
                 Hủy
               </SecondaryButton>

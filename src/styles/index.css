@@ -2,21 +2,24 @@
 
 @layer base {
   :root {
-    --bg-page: #090d16;
-    --bg-card: #0f172a;
-    --bg-input: #131d31;
-    --border-subtle: #1e293b;
-    --border-focus: #6366f1;
+    --bg-page: #080808;
+    --bg-card: rgba(255, 255, 255, 0.045);
+    --bg-card-solid: #121212;
+    --bg-input: #121212;
     
-    --accent: #6366f1;
-    --accent-hover: #4f46e5;
+    --border-subtle: rgba(255, 255, 255, 0.10);
+    --border-hover: rgba(255, 255, 255, 0.20);
+    --border-focus: rgba(255, 255, 255, 0.45);
     
-    --text-primary: #f8fafc;
-    --text-secondary: #94a3b8;
-    --text-muted: #64748b;
+    --text-primary: #f5f5f5;
+    --text-secondary: #a3a3a3;
+    --text-muted: #737373;
     
-    --error: #ef4444;
-    --success: #10b981;
+    --btn-primary-bg: #f5f5f5;
+    --btn-primary-text: #050505;
+    
+    --error: #f87171;
+    --success: #34d399;
   }
 
   body {
@@ -29,20 +32,31 @@
 
   h1, h2, h3, h4 {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    font-weight: 700;
-    letter-spacing: -0.02em;
+    font-weight: 600;
+    letter-spacing: -0.025em;
   }
 }
 
-/* Minimalist Card Container */
-.auth-card {
+/* Monochrome Glass Material */
+.monochrome-glass {
   background-color: var(--bg-card);
+  backdrop-filter: blur(24px) saturate(120%);
+  -webkit-backdrop-filter: blur(24px) saturate(120%);
   border: 1px solid var(--border-subtle);
   border-radius: 1rem;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
-/* Input Fields */
+/* Reduced transparency fallback */
+@media (prefers-reduced-transparency: reduce) {
+  .monochrome-glass {
+    background-color: var(--bg-card-solid);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* Input Fields & Autofill Override */
 .form-input {
   background-color: var(--bg-input);
   border: 1px solid var(--border-subtle);
@@ -54,25 +68,36 @@
 .form-input:focus {
   outline: none;
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15);
 }
 
 .form-input::placeholder {
   color: var(--text-muted);
 }
 
-/* Buttons */
+/* Chrome Autofill Style Fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 1000px #121212 inset !important;
+  -webkit-text-fill-color: #f5f5f5 !important;
+  caret-color: #f5f5f5 !important;
+  border-color: var(--border-subtle) !important;
+}
+
+/* Primary Button */
 .btn-primary {
-  background-color: var(--accent);
-  color: #ffffff;
+  background-color: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
   font-weight: 600;
   border-radius: 0.625rem;
-  transition: background-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  transition: background-color 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background-color: var(--accent-hover);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25);
+  background-color: #ffffff;
+  box-shadow: 0 4px 14px rgba(255, 255, 255, 0.12);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -80,22 +105,23 @@
 }
 
 .btn-primary:disabled {
-  opacity: 0.6;
+  opacity: 0.55;
   cursor: not-allowed;
 }
 
+/* Secondary Button */
 .btn-secondary {
   background-color: rgba(255, 255, 255, 0.05);
   border: 1px solid var(--border-subtle);
   color: var(--text-primary);
   font-weight: 500;
   border-radius: 0.625rem;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, transform 0.15s ease;
 }
 
 .btn-secondary:hover:not(:disabled) {
   background-color: rgba(255, 255, 255, 0.09);
-  border-color: rgba(255, 255, 255, 0.18);
+  border-color: var(--border-hover);
 }
 
 .btn-secondary:active:not(:disabled) {
@@ -106,7 +132,7 @@
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -115,10 +141,10 @@
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-/* Accessible reduced motion */
+/* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;

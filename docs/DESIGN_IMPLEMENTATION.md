@@ -1,37 +1,42 @@
 # Design Implementation & Architecture Report
 
-## 🎯 Design Read & Aesthetic Strategy
+## 🎯 Final Design Direction: “Monochrome Glass — Quiet Professionalism”
 
-**Design Read**: Minimalist authentication product for portfolio and production evaluation, implemented with a **"Quiet Precision"** design system adhering strictly to `design-taste-frontend` principles.
-
----
-
-## 🎨 Color Palette & Typography Tokens
-
-- **Background**: `#090d16` (Deep Charcoal)
-- **Surface**: `#0f172a` (Slate Surface)
-- **Border**: `#1e293b` (Subtle 1px border)
-- **Accent Primary**: `#6366f1` (Restrained Indigo)
-- **Accent Hover**: `#4f46e5` (Deep Indigo)
-- **Text High Contrast**: `#f8fafc`
-- **Text Muted**: `#94a3b8`
-- **Error Banner**: `#ef4444` (Muted Red)
-- **Success Banner**: `#10b981` (Muted Green)
+Adhering strictly to the workspace skill `design-taste-frontend`, the entire user interface has been refactored into a disciplined, high-precision monochrome glass design system.
 
 ---
 
-## 📐 Component Architecture
+## 🎨 Color & Material Tokens
 
-1. `AuthLayout`: Clean minimalist page wrapper with header brand mark (`AuthPortal`), centered viewport container, and subtle footer.
-2. `AuthCard`: Form container (~440px max width desktop) with rounded corners (`1rem`), 1px neutral border, subtle drop shadow, and clean spacing.
-3. `FormField`: Input block with label above, input box, helper text, and inline error.
-4. `PasswordMeter`: Compact 4-point requirement checklist:
-   - At least 8 characters
-   - One uppercase letter (`A-Z`)
-   - One lowercase letter (`a-z`)
-   - One special character (`!@#$%^&*()_+-=[]{}|;:,.<>?`)
-5. `SuccessModal`: Confirmation card rendering exact title string **`Successfully`**.
-6. `ProfilePage`: Personal information view and edit panel updating Firestore `users/{uid}` without passwords.
+- **Page Background**: `#080808` (Near-black with subtle top radial spotlight)
+- **Glass Card Background**: `rgba(255, 255, 255, 0.045)`
+- **Glass Card Blur**: `backdrop-filter: blur(24px) saturate(120%)` / `-webkit-backdrop-filter: blur(24px) saturate(120%)`
+- **Solid Fallback**: `#121212` for `prefers-reduced-transparency: reduce`
+- **Border**: `rgba(255, 255, 255, 0.10)`
+- **Border Focus**: `rgba(255, 255, 255, 0.45)` with `box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.15)`
+- **Primary Text**: `#f5f5f5` (Soft White)
+- **Secondary Text**: `#a3a3a3` (Cool Gray)
+- **Muted Text**: `#737373` (Medium Gray)
+- **Primary Button**: Solid `#f5f5f5` background, `#050505` text, 10px radius
+- **Secondary Button**: Translucent dark `rgba(255, 255, 255, 0.05)`, border `rgba(255, 255, 255, 0.10)`
+- **Chrome Autofill**: Overridden with `-webkit-box-shadow: 0 0 0 1000px #121212 inset !important`
+
+---
+
+## 📐 Component Architecture & Radius Scale
+
+- **Radius Scale**:
+  - Inputs & Buttons: `10px` (`0.625rem`)
+  - Main Glass Containers: `16px` (`1rem`)
+  - Modals & Badges: `12px` to `full`
+- **Typography Hierarchy**:
+  - Page Headings: `text-xl sm:text-2xl font-bold tracking-tight text-[#f5f5f5]`
+  - Labels: `text-xs font-medium text-[#a3a3a3]`
+  - Inputs: `text-sm text-[#f5f5f5] min-h-[44px]`
+  - Helper & Errors: `text-[11px]`
+- **Accessibility & Motion**:
+  - Password toggle controls include `aria-label`, visible focus state, and monochrome icon.
+  - `prefers-reduced-motion` suppresses transition delays.
 
 ---
 
@@ -40,7 +45,7 @@
 1. **`registerUser(email, password)`**:
    - Creates Firebase Auth user (`createUserWithEmailAndPassword`).
    - Writes `users/{uid}` document to Firestore with fields `{ uid, email, displayName, firstName, lastName, phone, address, createdAt }` (No password stored!).
-   - Displays modal with title `"Successfully"`.
+   - Displays glass modal with title `"Successfully"`.
    - Calls `signOut(auth)`.
    - Redirects to `/login`.
 

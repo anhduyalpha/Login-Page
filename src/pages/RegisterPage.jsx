@@ -101,12 +101,12 @@ export const RegisterPage = () => {
         <div className="space-y-1.5">
           <label 
             htmlFor="register-password" 
-            className="block text-xs font-medium text-[#94a3b8] uppercase tracking-wider font-sans"
+            className="block text-xs font-medium text-[#a3a3a3]"
           >
-            Mật khẩu <span className="text-indigo-400">*</span>
+            Mật khẩu <span className="text-[#f5f5f5]">*</span>
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#64748b]">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
               <Lock className="w-4 h-4" />
             </div>
             <input
@@ -122,7 +122,7 @@ export const RegisterPage = () => {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#64748b] hover:text-white"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#f5f5f5] focus:outline-none rounded transition-colors"
               aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
               {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -136,12 +136,12 @@ export const RegisterPage = () => {
         <div className="space-y-1.5">
           <label 
             htmlFor="register-confirm-password" 
-            className="block text-xs font-medium text-[#94a3b8] uppercase tracking-wider font-sans"
+            className="block text-xs font-medium text-[#a3a3a3]"
           >
-            Nhập lại mật khẩu <span className="text-indigo-400">*</span>
+            Nhập lại mật khẩu <span className="text-[#f5f5f5]">*</span>
           </label>
           <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#64748b]">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373]">
               <Lock className="w-4 h-4" />
             </div>
             <input
@@ -157,7 +157,7 @@ export const RegisterPage = () => {
             <button
               type="button"
               onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#64748b] hover:text-white"
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#f5f5f5] focus:outline-none rounded transition-colors"
               aria-label={showConfirmPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
             >
               {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -172,18 +172,18 @@ export const RegisterPage = () => {
           loading={submitting}
           className="mt-2"
         >
-          Đăng ký
+          Tạo tài khoản
         </PrimaryButton>
       </form>
 
       {/* Redirection Link */}
-      <div className="pt-3 border-t border-[#1e293b] text-center text-xs text-[#94a3b8]">
+      <div className="pt-3 border-t border-white/10 text-center text-xs text-[#a3a3a3]">
         Đã có tài khoản?{' '}
         <button
           id="link-go-to-login"
           type="button"
           onClick={() => navigateTo('login')}
-          className="text-indigo-400 font-semibold hover:text-indigo-300 hover:underline transition-colors"
+          className="text-white font-semibold hover:underline underline-offset-4 transition-colors cursor-pointer"
         >
           Đăng nhập
         </button>
