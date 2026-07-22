@@ -210,11 +210,20 @@ void main() {
   // ─── Specular Highlights & Caustics ────────────────────────────────────────
   
   // Approximate surface normal from noise gradient
+  // Use simpler noise on mobile for performance
   float eps = 0.01;
-  float nx = fbm((p + vec2(eps, 0.0)) * noiseScale + t * 0.3) - 
-             fbm((p - vec2(eps, 0.0)) * noiseScale + t * 0.3);
-  float ny = fbm((p + vec2(0.0, eps)) * noiseScale + t * 0.3) - 
-             fbm((p - vec2(0.0, eps)) * noiseScale + t * 0.3);
+  float nx, ny;
+  if (u_isMobile > 0.5) {
+    nx = snoise((p + vec2(eps, 0.0)) * noiseScale + t * 0.3) - 
+         snoise((p - vec2(eps, 0.0)) * noiseScale + t * 0.3);
+    ny = snoise((p + vec2(0.0, eps)) * noiseScale + t * 0.3) - 
+         snoise((p - vec2(0.0, eps)) * noiseScale + t * 0.3);
+  } else {
+    nx = fbm((p + vec2(eps, 0.0)) * noiseScale + t * 0.3) - 
+         fbm((p - vec2(eps, 0.0)) * noiseScale + t * 0.3);
+    ny = fbm((p + vec2(0.0, eps)) * noiseScale + t * 0.3) - 
+         fbm((p - vec2(0.0, eps)) * noiseScale + t * 0.3);
+  }
   vec2 normal = vec2(nx, ny) * 2.0 + displacement * 8.0;
   
   // Specular from top-right light
@@ -222,9 +231,11 @@ void main() {
   float spec = pow(max(dot(normalize(normal + 0.001), lightDir), 0.0), 12.0);
   col += vec3(0.06) * spec;
   
-  // Faint caustic highlights
-  float caustic = pow(abs(snoise(p * 5.0 + t * 0.5 + normal * 2.0)), 3.0);
-  col += vec3(0.018) * caustic;
+  // Faint caustic highlights (skip on mobile)
+  if (u_isMobile < 0.5) {
+    float caustic = pow(abs(snoise(p * 5.0 + t * 0.5 + normal * 2.0)), 3.0);
+    col += vec3(0.018) * caustic;
+  }
   
   // Ripple highlights
   col += vec3(0.04) * abs(rippleDisp) * 3.0;
