@@ -10,7 +10,6 @@
     "capture-screenshots": "node scripts/capture_screenshots.js"
   },
   "dependencies": {
-    "canvas-confetti": "^1.9.4",
     "firebase": "^11.3.0",
     "framer-motion": "^12.42.2",
     "lucide-react": "^0.475.0",

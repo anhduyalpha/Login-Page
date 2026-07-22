@@ -5,14 +5,34 @@ import { NotificationToast } from './components/NotificationToast';
 import { RegisterPage } from './pages/RegisterPage';
 import { LoginPage } from './pages/LoginPage';
 import { ProfilePage } from './pages/ProfilePage';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+
+const pageTransition = {
+  duration: 0.32,
+  ease: [0.16, 1, 0.3, 1],
+};
+
+const pageVariants = {
+  initial: { opacity: 0, y: 10, filter: 'blur(4px)' },
+  animate: { opacity: 1, y: 0, filter: 'blur(0px)' },
+  exit: { opacity: 0, y: -8, filter: 'blur(4px)' },
+};
+
+const reducedVariants = {
+  initial: { opacity: 0 },
+  animate: { opacity: 1 },
+  exit: { opacity: 0 },
+};
 
 const MainContent = () => {
   const { currentView, loading } = useAuth();
+  const shouldReduceMotion = useReducedMotion();
+
+  const variants = shouldReduceMotion ? reducedVariants : pageVariants;
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#060606] text-[#f5f5f5]">
+      <div className="min-h-screen flex items-center justify-center bg-[#030303] text-[#f5f5f5]">
         <motion.div 
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -37,10 +57,11 @@ const MainContent = () => {
         {currentView === 'register' && (
           <motion.div
             key="register"
-            initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            variants={variants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={pageTransition}
             className="w-full flex justify-center"
           >
             <RegisterPage />
@@ -50,10 +71,11 @@ const MainContent = () => {
         {currentView === 'login' && (
           <motion.div
             key="login"
-            initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            variants={variants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={pageTransition}
             className="w-full flex justify-center"
           >
             <LoginPage />
@@ -63,10 +85,11 @@ const MainContent = () => {
         {currentView === 'profile' && (
           <motion.div
             key="profile"
-            initial={{ opacity: 0, y: 10, filter: 'blur(4px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, y: -8, filter: 'blur(4px)' }}
-            transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+            variants={variants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={pageTransition}
             className="w-full flex justify-center"
           >
             <ProfilePage />

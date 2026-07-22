@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
+import { Eye, EyeOff, CheckCircle2, AlertCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export const FormField = ({
@@ -27,7 +27,7 @@ export const FormField = ({
       {label && (
         <label 
           htmlFor={id} 
-          className={`block text-xs font-medium transition-colors duration-150 ${
+          className={`block text-xs font-medium transition-colors duration-200 ${
             isFocused ? 'text-[#f5f5f5]' : 'text-[#a3a3a3]'
           }`}
         >
@@ -37,8 +37,8 @@ export const FormField = ({
 
       <div className={`form-input-container ${error ? 'animate-shake-once' : ''}`}>
         {IconComponent && (
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-[#737373] transition-colors duration-150">
-            <IconComponent className={`w-4 h-4 ${isFocused ? 'text-white' : ''}`} />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none transition-colors duration-200">
+            <IconComponent className={`w-4 h-4 ${isFocused ? 'text-white' : 'text-[#737373]'}`} />
           </div>
         )}
 
@@ -53,19 +53,28 @@ export const FormField = ({
           placeholder={placeholder}
           autoComplete={autoComplete}
           aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${id}-error` : undefined}
           className={`form-input w-full py-2.5 text-sm ${IconComponent ? 'pl-9' : 'pl-3.5'} ${
             isPasswordField || isValid ? 'pr-10' : 'pr-3.5'
           } min-h-[44px] ${error ? 'border-red-400/50 focus:border-red-400' : ''}`}
         />
 
-        {/* Valid Icon indicator */}
-        {isValid && !isPasswordField && (
-          <div className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-400 pointer-events-none">
-            <CheckCircle2 className="w-4 h-4" />
-          </div>
-        )}
+        {/* Valid Icon indicator with smooth transition */}
+        <AnimatePresence>
+          {isValid && !isPasswordField && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.7 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.7 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center text-emerald-400 pointer-events-none"
+            >
+              <CheckCircle2 className="w-4 h-4" />
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-        {/* Password visibility toggle */}
+        {/* Password visibility toggle with smooth icon crossfade */}
         {isPasswordField && (
           <button
             type="button"
@@ -73,19 +82,21 @@ export const FormField = ({
             className="absolute inset-y-0 right-0 pr-3 flex items-center text-[#737373] hover:text-[#f5f5f5] focus:outline-none focus:text-white rounded transition-colors cursor-pointer"
             aria-label={showPassword ? 'Ẩn mật khẩu' : 'Hiển thị mật khẩu'}
           >
-            <motion.div
-              key={showPassword ? 'hide' : 'show'}
-              initial={{ opacity: 0, rotate: -15 }}
-              animate={{ opacity: 1, rotate: 0 }}
-              exit={{ opacity: 0, rotate: 15 }}
-              transition={{ duration: 0.15 }}
-            >
-              {showPassword ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </motion.div>
+            <AnimatePresence mode="wait" initial={false}>
+              <motion.div
+                key={showPassword ? 'hide' : 'show'}
+                initial={{ opacity: 0, rotate: -10 }}
+                animate={{ opacity: 1, rotate: 0 }}
+                exit={{ opacity: 0, rotate: 10 }}
+                transition={{ duration: 0.15 }}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </button>
         )}
       </div>
@@ -94,16 +105,20 @@ export const FormField = ({
         <p className="text-[11px] text-[#737373]">{helperText}</p>
       )}
 
+      {/* Error message with icon, smooth reveal */}
       <AnimatePresence mode="wait">
         {error && (
           <motion.p
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-            className="text-[11px] text-red-400 font-medium pt-0.5"
+            id={`${id}-error`}
+            initial={{ opacity: 0, y: -4, height: 0 }}
+            animate={{ opacity: 1, y: 0, height: 'auto' }}
+            exit={{ opacity: 0, y: -4, height: 0 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="text-[11px] text-red-400 font-medium pt-0.5 flex items-center gap-1"
+            role="alert"
           >
-            {error}
+            <AlertCircle className="w-3 h-3 shrink-0" />
+            <span>{error}</span>
           </motion.p>
         )}
       </AnimatePresence>

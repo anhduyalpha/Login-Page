@@ -1,63 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useAuth } from '../context/AuthContext';
-import { motion, useMotionValue, useSpring, useTransform, useReducedMotion } from 'framer-motion';
 import { LogOut } from 'lucide-react';
+import { LiquidGlassBackground } from './LiquidGlassBackground';
 
 export const AuthLayout = ({ children }) => {
   const { currentUser, logout } = useAuth();
-  const shouldReduceMotion = useReducedMotion();
-
-  // Desktop Pointer Parallax Displacement (max 8-14px)
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-
-  const springConfig = { stiffness: 60, damping: 25 };
-  const smoothX = useSpring(mouseX, springConfig);
-  const smoothY = useSpring(mouseY, springConfig);
-
-  const parallaxX = useTransform(smoothX, [-0.5, 0.5], [-12, 12]);
-  const parallaxY = useTransform(smoothY, [-0.5, 0.5], [-12, 12]);
-
-  useEffect(() => {
-    if (shouldReduceMotion) return;
-
-    const handleMouseMove = (e) => {
-      const { innerWidth, innerHeight } = window;
-      const x = (e.clientX / innerWidth) - 0.5;
-      const y = (e.clientY / innerHeight) - 0.5;
-      mouseX.set(x);
-      mouseY.set(y);
-    };
-
-    // Only enable on desktop pointer devices
-    if (window.matchMedia('(pointer: fine)').matches) {
-      window.addEventListener('mousemove', handleMouseMove);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, [mouseX, mouseY, shouldReduceMotion]);
 
   return (
-    <div className="min-h-screen flex flex-col justify-between bg-[#060606] text-[#f5f5f5] selection:bg-white/20 selection:text-white relative overflow-hidden font-sans">
+    <div className="min-h-screen flex flex-col justify-between bg-[#030303] text-[#f5f5f5] selection:bg-white/20 selection:text-white relative overflow-hidden font-sans">
       
-      {/* BACKGROUND LAYER 1 & 5: Dark Base & Subtle Vignette */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        {/* Layer 2: Radial White Light top right */}
-        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.07)_0%,transparent_70%)] blur-3xl pointer-events-none" />
-        
-        {/* Layer 3: Soft Graphite Light Field bottom left */}
-        <div className="absolute -bottom-40 -left-40 w-[650px] h-[650px] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.04)_0%,transparent_70%)] blur-3xl pointer-events-none" />
+      {/* Interactive Liquid Glass WebGL Background */}
+      <LiquidGlassBackground />
 
-        {/* Layer 4: Parallax Geometric Ellipse Surface */}
-        <motion.div 
-          style={shouldReduceMotion ? {} : { x: parallaxX, y: parallaxY }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[300px] rounded-[100%] bg-gradient-to-tr from-white/[0.04] to-transparent blur-[80px] pointer-events-none"
-        />
-
-        {/* Subtle Vignette */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.6)_100%)] pointer-events-none" />
+      {/* CSS Fallback background layers (visible if WebGL fails) */}
+      <div className="fixed inset-0 pointer-events-none z-0 -z-10">
+        <div className="absolute -top-32 -right-32 w-[600px] h-[600px] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.06)_0%,transparent_70%)] blur-3xl" />
+        <div className="absolute -bottom-40 -left-40 w-[650px] h-[650px] rounded-full bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.035)_0%,transparent_70%)] blur-3xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_50%,rgba(0,0,0,0.6)_100%)]" />
       </div>
 
       {/* Minimal Header only when logged in */}

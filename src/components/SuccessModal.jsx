@@ -1,8 +1,10 @@
 import React, { useEffect } from 'react';
 import { Check, ArrowRight } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export const SuccessModal = ({ onComplete }) => {
+  const shouldReduceMotion = useReducedMotion();
+
   useEffect(() => {
     const timer = setTimeout(() => {
       onComplete();
@@ -18,6 +20,16 @@ export const SuccessModal = ({ onComplete }) => {
       aria-modal="true"
       aria-labelledby="success-title"
     >
+      {/* Gentle outward ripple ring behind confirmation */}
+      {!shouldReduceMotion && (
+        <motion.div
+          initial={{ scale: 0.3, opacity: 0.3 }}
+          animate={{ scale: 2.5, opacity: 0 }}
+          transition={{ duration: 1.0, ease: [0.16, 1, 0.3, 1] }}
+          className="absolute w-40 h-40 rounded-full border border-white/20"
+        />
+      )}
+
       <motion.div 
         initial={{ opacity: 0, scale: 0.97, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
