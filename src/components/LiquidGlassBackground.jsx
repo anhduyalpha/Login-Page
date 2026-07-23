@@ -339,6 +339,7 @@ export const LiquidGlassBackground = () => {
   const pointerRef = useRef({ x: 0.5, y: 0.5, vx: 0, vy: 0, active: false });
   const smoothPointerRef = useRef({ x: 0.5, y: 0.5, vx: 0, vy: 0 });
   const ripplesRef = useRef([]);
+  const lastHoverRippleRef = useRef({ x: null, y: null, time: 0 });
   const isVisibleRef = useRef(true);
   const isMobileRef = useRef(false);
   const reducedMotionRef = useRef(false);
@@ -346,6 +347,9 @@ export const LiquidGlassBackground = () => {
 
   const MAX_RIPPLES = 6;
   const RIPPLE_DURATION = 1200; // ms
+  const HOVER_RIPPLE_INTERVAL = 90; // ms
+  const HOVER_RIPPLE_DISTANCE = 10; // px
+  const HOVER_RIPPLE_STRENGTH = 0.65;
 
   const initWebGL = useCallback(() => {
     const canvas = canvasRef.current;
@@ -509,8 +513,24 @@ export const LiquidGlassBackground = () => {
 
     // ─── Event Handlers ──────────────────────────────────────────────────────
 
+    const resetHoverPointer = () => {
+      pointerRef.current.active = false;
+      pointerRef.current.vx = 0;
+      pointerRef.current.vy = 0;
+      lastHoverRippleRef.current = { x: null, y: null, time: 0 };
+    };
+
     const handlePointerMove = (e) => {
       if (reducedMotionRef.current || isMobileRef.current) return;
+
+      const target = e.target;
+      if (target instanceof Element && target.closest(
+        '.glass-level-1, input, button, a, textarea, select, form, [data-liquid-ignore]'
+      )) {
+        resetHoverPointer();
+        return;
+      }
+
       const rect = canvasRef.current?.getBoundingClientRect();
       if (!rect) return;
 
@@ -527,6 +547,39 @@ export const LiquidGlassBackground = () => {
       prev.y = y;
       prev.active = true;
       lastPointerTimeRef.current = Date.now();
+
+      const rippleNow = Date.now();
+      const lastHover = lastHoverRippleRef.current;
+      const dx = lastHover.x === null ? Infinity : e.clientX - lastHover.x;
+      const dy = lastHover.y === null ? Infinity : e.clientY - lastHover.y;
+      const distance = Math.hypot(dx, dy);
+
+      if (
+        rippleNow - lastHover.time >= HOVER_RIPPLE_INTERVAL &&
+        distance >= HOVER_RIPPLE_DISTANCE
+      ) {
+        if (ripplesRef.current.length >= MAX_RIPPLES) {
+          const oldestHoverIndex = ripplesRef.current.findIndex(r => r.source === 'hover');
+          if (oldestHoverIndex === -1) return;
+          ripplesRef.current.splice(oldestHoverIndex, 1);
+        }
+
+        ripplesRef.current.push({
+          x, y,
+          start: rippleNow,
+          strength: HOVER_RIPPLE_STRENGTH,
+          source: 'hover',
+        });
+
+        lastHover.x = e.clientX;
+        lastHover.y = e.clientY;
+        lastHover.time = rippleNow;
+      }
+    };
+
+    const handlePointerLeave = () => {
+      if (isMobileRef.current) return;
+      resetHoverPointer();
     };
 
     const handlePointerDown = (e) => {
@@ -537,15 +590,18 @@ export const LiquidGlassBackground = () => {
       const x = (e.clientX - rect.left) / rect.width;
       const y = 1.0 - (e.clientY - rect.top) / rect.height;
 
-      // Limit ripple creation rate
+      // Limit ripple creation rate without letting hover suppress clicks
       const now = Date.now();
-      const recentRipples = ripplesRef.current.filter(r => now - r.start < 200);
+      const recentRipples = ripplesRef.current.filter(
+        r => r.source !== 'hover' && now - r.start < 200
+      );
       if (recentRipples.length >= 3) return;
 
       ripplesRef.current.push({
         x, y,
         start: now,
         strength: isMobileRef.current ? 0.6 : 1.0,
+        source: 'click',
       });
 
       // Keep max ripples
@@ -596,6 +652,7 @@ export const LiquidGlassBackground = () => {
     // Attach listeners
     if (!isMobileRef.current) {
       window.addEventListener('pointermove', handlePointerMove, { passive: true });
+      document.documentElement.addEventListener('pointerleave', handlePointerLeave, { passive: true });
     }
     window.addEventListener('pointerdown', handlePointerDown, { passive: true });
     if (isMobileRef.current) {
@@ -608,6 +665,7 @@ export const LiquidGlassBackground = () => {
     return () => {
       if (rafRef.current) cancelAnimationFrame(rafRef.current);
       window.removeEventListener('pointermove', handlePointerMove);
+      document.documentElement.removeEventListener('pointerleave', handlePointerLeave);
       window.removeEventListener('pointerdown', handlePointerDown);
       window.removeEventListener('touchstart', handleTouchStart);
       document.removeEventListener('visibilitychange', handleVisibility);
