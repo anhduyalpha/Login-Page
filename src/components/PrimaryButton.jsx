@@ -1,6 +1,6 @@
 import React from 'react';
 import { Loader2, Check } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 
 export const PrimaryButton = ({ 
   children, 
@@ -12,12 +12,18 @@ export const PrimaryButton = ({
   onClick, 
   className = '' 
 }) => {
+  const shouldReduceMotion = useReducedMotion();
+  const isDisabled = disabled || loading || success;
+
   return (
-    <button
+    <motion.button
       id={id}
       type={type}
-      disabled={disabled || loading || success}
+      disabled={isDisabled}
       onClick={onClick}
+      whileHover={!isDisabled && !shouldReduceMotion ? { y: -1.5, scale: 1.005 } : undefined}
+      whileTap={!isDisabled && !shouldReduceMotion ? { y: 0, scale: 0.98 } : undefined}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={`btn-primary w-full py-2.5 px-4 font-semibold text-sm flex items-center justify-center gap-2 min-h-[44px] cursor-pointer ${className}`}
     >
       <AnimatePresence mode="wait" initial={false}>
@@ -58,7 +64,7 @@ export const PrimaryButton = ({
           </motion.div>
         )}
       </AnimatePresence>
-    </button>
+    </motion.button>
   );
 };
 
@@ -70,15 +76,20 @@ export const SecondaryButton = ({
   onClick, 
   className = '' 
 }) => {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
-    <button
+    <motion.button
       id={id}
       type={type}
       disabled={disabled}
       onClick={onClick}
+      whileHover={!disabled && !shouldReduceMotion ? { y: -1, scale: 1.01 } : undefined}
+      whileTap={!disabled && !shouldReduceMotion ? { y: 0, scale: 0.97 } : undefined}
+      transition={{ type: 'spring', stiffness: 400, damping: 25 }}
       className={`btn-secondary py-2 px-3.5 text-xs flex items-center justify-center gap-1.5 min-h-[38px] cursor-pointer ${className}`}
     >
       {children}
-    </button>
+    </motion.button>
   );
 };

@@ -1,0 +1,2 @@
+- All user-facing text strings (e.g. the exact modal title `Successfully`) are treated as hard requirements verified by the Puppeteer smoke tests rather than free-form prose.
+- Screenshots produced by the E2E scripts are committed into `docs/screensshots/` alongside source code so visual regression is tracked in version control.

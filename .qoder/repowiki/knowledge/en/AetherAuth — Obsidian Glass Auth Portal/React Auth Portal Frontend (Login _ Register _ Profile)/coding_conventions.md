@@ -1,0 +1,5 @@
+- All user-facing error messages are produced through `translateFirebaseError(errorCode)` rather than raw Firebase codes, keeping i18n strings centralized.
+- Every async service function returns `{ success, user }` objects and throws `Error` instances with translated Vietnamese messages, letting callers wrap them in try/catch uniformly.
+- The localStorage demo engine mirrors the Firebase API surface exactly — same function names, same return shapes — so the rest of the app has zero awareness of which backend is active.
+- Global UI state (auth, navigation, toasts) lives exclusively in `AuthContext`; components access it via the custom `useAuth()` hook, which throws if used outside `AuthProvider`.
+- Framer Motion page switches use `key={view}` with explicit `variants`/`transition` props and fall back to opacity-only variants when `useReducedMotion()` is true.

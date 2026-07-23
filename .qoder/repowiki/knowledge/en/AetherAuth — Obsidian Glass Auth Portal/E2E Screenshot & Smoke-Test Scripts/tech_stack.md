@@ -1,0 +1,1 @@
+Node.js ESM (`import.meta.url` / `fileURLToPath`), Puppeteer in headless mode with `--no-sandbox --disable-setuid-sandbox` flags, targeting a local Next.js dev server at port 3000.

@@ -1,10 +1,10 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-  registerUser, 
-  loginUser, 
-  logoutUser, 
-  updateUserProfileData, 
-  getCurrentAuthUser,
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import {
+  registerUser,
+  loginUser,
+  logoutUser,
+  updateUserProfileData,
+  fetchUserProfile,
   auth
 } from '../services/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -14,73 +14,93 @@ const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [currentView, setCurrentView] = useState('register'); // 'register', 'login', 'profile'
+  const [currentView, setCurrentView] = useState('register'); // 'register' | 'login' | 'profile'
   const [toastNotification, setToastNotification] = useState(null);
 
-  // Initialize Auth state
-  useEffect(() => {
-    // Check initial cached / demo user
-    const initialUser = getCurrentAuthUser();
-    if (initialUser) {
-      setCurrentUser(initialUser);
-      // Default view if already logged in is profile
-      setCurrentView('profile');
-    }
-
-    let unsubscribe = () => {};
-    if (auth) {
-      unsubscribe = onAuthStateChanged(auth, (user) => {
-        if (user) {
-          setCurrentUser(prev => ({
-            ...prev,
-            uid: user.uid,
-            email: user.email,
-            displayName: user.displayName || user.email.split('@')[0],
-            emailVerified: user.emailVerified
-          }));
-        }
-        setLoading(false);
-      });
-    } else {
-      setLoading(false);
-    }
-
-    return () => unsubscribe();
-  }, []);
+  // Suppress transient auth events while registerUser creates the account and
+  // then signs it out again. registerUser owns that lifecycle.
+  const registrationInProgressRef = useRef(false);
+  // Auto-navigate to profile only on the very first restored session.
+  const initializedRef = useRef(false);
 
   const showToast = (message, type = 'info') => {
     setToastNotification({ message, type, id: Date.now() });
   };
 
+  // Firebase Auth is the single source of truth for the session.
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      // During registration, ignore the transient signed-in state.
+      if (registrationInProgressRef.current) {
+        if (!user) setCurrentUser(null);
+        setLoading(false);
+        initializedRef.current = true;
+        return;
+      }
+
+      if (user) {
+        // Load users/{uid} ONLY after Firebase Auth confirms the user.
+        try {
+          const profile = await fetchUserProfile(user.uid);
+          setCurrentUser({
+            ...profile,
+            email: user.email,
+            emailVerified: user.emailVerified
+          });
+          if (!initializedRef.current) {
+            setCurrentView('profile');
+          }
+        } catch (err) {
+          // Never swallow a profile-load failure: fail closed.
+          console.error('[Auth] Failed to load user profile:', err);
+          setCurrentUser(null);
+          showToast(err.message || 'Không thể tải hồ sơ người dùng.', 'error');
+          try {
+            await logoutUser();
+          } catch (signOutErr) {
+            console.error('[Auth] Sign-out after profile failure also failed:', signOutErr);
+          }
+          setCurrentView('login');
+        }
+      } else {
+        // A null Firebase user ALWAYS clears the local session.
+        setCurrentUser(null);
+      }
+
+      setLoading(false);
+      initializedRef.current = true;
+    });
+
+    return () => unsubscribe();
+  }, []);
+
   const handleRegister = async (email, password) => {
+    registrationInProgressRef.current = true;
     try {
-      const res = await registerUser(email, password);
-      setCurrentUser(res.user);
-      return res;
-    } catch (err) {
-      throw err;
+      // Resolves only after BOTH Auth and Firestore succeed; then signs out.
+      return await registerUser(email, password);
+    } finally {
+      registrationInProgressRef.current = false;
     }
   };
 
   const handleLogin = async (email, password) => {
-    try {
-      const res = await loginUser(email, password);
-      setCurrentUser(res.user);
-      setCurrentView('profile');
-      showToast('Đăng nhập thành công! Chào mừng bạn trở lại.', 'success');
-      return res;
-    } catch (err) {
-      throw err;
-    }
+    // Errors (auth + Firestore) propagate to the caller — no fallback.
+    const res = await loginUser(email, password);
+    setCurrentUser(res.user);
+    setCurrentView('profile');
+    showToast('Đăng nhập thành công! Chào mừng bạn trở lại.', 'success');
+    return res;
   };
 
   const handleLogout = async () => {
     try {
       await logoutUser();
-      setCurrentUser(null);
       setCurrentView('login');
       showToast('Đã đăng xuất khỏi tài khoản.', 'info');
+      // currentUser is cleared by onAuthStateChanged(null).
     } catch (err) {
+      console.error('[Auth] Logout failed:', err);
       showToast('Không thể đăng xuất. Vui lòng thử lại.', 'error');
     }
   };
@@ -88,10 +108,11 @@ export const AuthProvider = ({ children }) => {
   const handleUpdateProfile = async (profileData) => {
     try {
       const res = await updateUserProfileData(profileData);
-      setCurrentUser(res.user);
+      setCurrentUser((prev) => ({ ...prev, ...res.user }));
       showToast('Cập nhật thông tin cá nhân thành công!', 'success');
       return res;
     } catch (err) {
+      console.error('[Auth] Profile update failed:', err);
       showToast(err.message || 'Cập nhật thất bại. Vui lòng thử lại.', 'error');
       throw err;
     }
@@ -103,19 +124,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{
-      currentUser,
-      loading,
-      currentView,
-      navigateTo,
-      register: handleRegister,
-      login: handleLogin,
-      logout: handleLogout,
-      updateProfile: handleUpdateProfile,
-      toastNotification,
-      showToast,
-      clearToast: () => setToastNotification(null)
-    }}>
+    <AuthContext.Provider
+      value={{
+        currentUser,
+        loading,
+        currentView,
+        navigateTo,
+        register: handleRegister,
+        login: handleLogin,
+        logout: handleLogout,
+        updateProfile: handleUpdateProfile,
+        toastNotification,
+        showToast,
+        clearToast: () => setToastNotification(null)
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

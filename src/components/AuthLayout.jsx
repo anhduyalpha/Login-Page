@@ -37,7 +37,7 @@ export const AuthLayout = ({ children }) => {
             </span>
             <button
               onClick={logout}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-[#a3a3a3] hover:text-white transition-colors cursor-pointer"
+              className="btn-glass flex items-center gap-1.5 px-2.5 py-1 text-xs text-[#a3a3a3] hover:text-white cursor-pointer"
               aria-label="Đăng xuất"
             >
               <LogOut className="w-3.5 h-3.5" />

@@ -1,47 +1,92 @@
 import { initializeApp } from 'firebase/app';
-import { 
-  getAuth, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut, 
-  updateProfile
+import {
+  getAuth,
+  connectAuthEmulator,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+  deleteUser
 } from 'firebase/auth';
 import {
   getFirestore,
+  connectFirestoreEmulator,
   doc,
   setDoc,
   getDoc,
   updateDoc
 } from 'firebase/firestore';
 
-// Check if a real custom Firebase API key is provided
-const rawApiKey = import.meta.env.VITE_FIREBASE_API_KEY;
-const hasRealFirebaseConfig = Boolean(rawApiKey && !rawApiKey.includes('DemoKey'));
+/**
+ * Required Firebase Web SDK environment variables.
+ * All of these MUST be provided at build time (Vercel dashboard / .env.local).
+ * There are NO demo defaults and NO localStorage fallback.
+ */
+const REQUIRED_ENV_KEYS = [
+  'VITE_FIREBASE_API_KEY',
+  'VITE_FIREBASE_AUTH_DOMAIN',
+  'VITE_FIREBASE_PROJECT_ID',
+  'VITE_FIREBASE_STORAGE_BUCKET',
+  'VITE_FIREBASE_MESSAGING_SENDER_ID',
+  'VITE_FIREBASE_APP_ID'
+];
 
-const firebaseConfig = {
-  apiKey: rawApiKey || "AIzaSyDemoKeyForAetherAuthTesting123",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "aether-auth-demo.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "aether-auth-demo",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "aether-auth-demo.appspot.com",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "109876543210",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:109876543210:web:aetherauth123456"
+/**
+ * Pure helper (unit-testable): returns the list of required Firebase env vars
+ * that are missing or blank in the supplied env object.
+ */
+export const getMissingFirebaseEnvVars = (env = {}) =>
+  REQUIRED_ENV_KEYS.filter((key) => {
+    const value = env[key];
+    return value === undefined || value === null || String(value).trim() === '';
+  });
+
+/**
+ * Builds a validated Firebase config from the supplied env object.
+ * Throws a clear, actionable error when any required variable is missing.
+ */
+export const buildFirebaseConfig = (env = {}) => {
+  const missing = getMissingFirebaseEnvVars(env);
+  if (missing.length > 0) {
+    throw new Error(
+      `[Firebase] Missing required environment variable(s): ${missing.join(', ')}. ` +
+        'Set every VITE_FIREBASE_* variable (Vercel Project Settings → Environment Variables ' +
+        'or a local .env.local). See .env.example. The app cannot start without a real Firebase project.'
+    );
+  }
+  return {
+    apiKey: env.VITE_FIREBASE_API_KEY,
+    authDomain: env.VITE_FIREBASE_AUTH_DOMAIN,
+    projectId: env.VITE_FIREBASE_PROJECT_ID,
+    storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET,
+    messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+    appId: env.VITE_FIREBASE_APP_ID,
+    ...(env.VITE_FIREBASE_MEASUREMENT_ID
+      ? { measurementId: env.VITE_FIREBASE_MEASUREMENT_ID }
+      : {})
+  };
 };
 
-let app;
-let auth;
-let db;
+// Validate + initialize eagerly. A misconfiguration fails loudly at startup
+// instead of silently degrading to an insecure fallback.
+const firebaseConfig = buildFirebaseConfig(import.meta.env);
 
-if (hasRealFirebaseConfig) {
-  try {
-    app = initializeApp(firebaseConfig);
-    auth = getAuth(app);
-    db = getFirestore(app);
-  } catch (error) {
-    console.warn("Firebase initialization failed, using local storage engine:", error);
-  }
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Optional: connect to the local Firebase Emulator Suite for automated
+// verification/e2e. Enabled ONLY when VITE_FIREBASE_USE_EMULATOR === 'true'.
+// Production builds never set this flag, so live traffic is unaffected.
+if (import.meta.env.VITE_FIREBASE_USE_EMULATOR === 'true') {
+  const authHost = import.meta.env.VITE_FIREBASE_AUTH_EMULATOR_URL || 'http://127.0.0.1:9099';
+  const fsHost = import.meta.env.VITE_FIREBASE_FIRESTORE_EMULATOR_HOST || '127.0.0.1';
+  const fsPort = Number(import.meta.env.VITE_FIREBASE_FIRESTORE_EMULATOR_PORT || 8080);
+  connectAuthEmulator(auth, authHost, { disableWarnings: true });
+  connectFirestoreEmulator(db, fsHost, fsPort);
 }
 
-// Friendly translation for Firebase Auth error codes
+/** Friendly translation for Firebase Auth error codes. */
 export const translateFirebaseError = (errorCode) => {
   switch (errorCode) {
     case 'auth/email-already-in-use':
@@ -64,220 +109,131 @@ export const translateFirebaseError = (errorCode) => {
   }
 };
 
-// Local storage demo engine keys
-const DEMO_USERS_KEY = 'aether_auth_demo_users';
-const CURRENT_USER_KEY = 'aether_auth_current_user';
-
-const getDemoUsers = () => {
-  try {
-    const stored = localStorage.getItem(DEMO_USERS_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch (e) {
-    return [];
+/**
+ * Loads the users/{uid} profile document.
+ * Only call AFTER Firebase Auth has confirmed the user.
+ * Firestore errors are NOT swallowed — they propagate to the caller.
+ */
+export const fetchUserProfile = async (uid) => {
+  const snap = await getDoc(doc(db, 'users', uid));
+  if (!snap.exists()) {
+    throw new Error('Không tìm thấy hồ sơ người dùng trong hệ thống.');
   }
+  return { uid, ...snap.data() };
 };
 
-const saveDemoUsers = (users) => {
-  try {
-    localStorage.setItem(DEMO_USERS_KEY, JSON.stringify(users));
-  } catch (e) {}
-};
-
-const getDemoCurrentUser = () => {
-  try {
-    const stored = localStorage.getItem(CURRENT_USER_KEY);
-    return stored ? JSON.parse(stored) : null;
-  } catch (e) {
-    return null;
-  }
-};
-
-const setDemoCurrentUser = (user) => {
-  try {
-    if (user) {
-      localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(CURRENT_USER_KEY);
-    }
-  } catch (e) {}
-};
-
-// Register User Operation with Firestore Document Creation (NO PASSWORD STORED)
+/**
+ * Register a new user.
+ * 1. Create the Firebase Auth account.
+ * 2. Create the users/{uid} Firestore document (no password stored).
+ * 3. If the document write fails, ROLL BACK by deleting the Auth user, then throw.
+ * 4. On full success, sign the user out (registration must not auto-authenticate).
+ * There is NO fallback engine — every failure propagates.
+ */
 export const registerUser = async (email, password) => {
   const cleanEmail = email.trim().toLowerCase();
 
-  if (hasRealFirebaseConfig && auth) {
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
-      const uid = userCredential.user.uid;
-      const usernameFromEmail = cleanEmail.split('@')[0];
-
-      // Profile Document WITHOUT password
-      const profileData = {
-        uid,
-        email: cleanEmail,
-        displayName: usernameFromEmail,
-        firstName: '',
-        lastName: '',
-        phone: '',
-        address: '',
-        createdAt: new Date().toISOString()
-      };
-
-      // Create document in Firestore users/{uid}
-      if (db) {
-        try {
-          await setDoc(doc(db, "users", uid), profileData);
-        } catch (dbErr) {
-          console.warn("Firestore setDoc warning:", dbErr);
-        }
-      }
-
-      setDemoCurrentUser(profileData);
-      return { success: true, user: profileData, uid };
-    } catch (error) {
-      if (error.code === 'auth/email-already-in-use' || error.code === 'auth/invalid-email' || error.code === 'auth/weak-password') {
-        throw new Error(translateFirebaseError(error.code));
-      }
-      console.warn("Live Firebase error, falling back to local storage engine:", error);
-    }
+  let credential;
+  try {
+    credential = await createUserWithEmailAndPassword(auth, cleanEmail, password);
+  } catch (error) {
+    throw new Error(translateFirebaseError(error.code));
   }
 
-  // Robust local storage engine fallback
-  await new Promise(res => setTimeout(res, 300));
-  const users = getDemoUsers();
-
-  if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
-    throw new Error(translateFirebaseError('auth/email-already-in-use'));
-  }
-
-  const usernameFromEmail = cleanEmail.split('@')[0];
-  const uid = 'user_' + Date.now();
-  
-  // Profile Document WITHOUT password
-  const newUser = {
+  const uid = credential.user.uid;
+  const profileData = {
     uid,
     email: cleanEmail,
-    displayName: usernameFromEmail,
+    displayName: cleanEmail.split('@')[0],
     firstName: '',
     lastName: '',
     phone: '',
     address: '',
-    emailVerified: true,
+    bio: '',
     createdAt: new Date().toISOString()
   };
 
-  users.push(newUser);
-  saveDemoUsers(users);
-  setDemoCurrentUser(newUser);
+  try {
+    await setDoc(doc(db, 'users', uid), profileData);
+  } catch (dbError) {
+    // Roll back the just-created Auth user so we never leave an account
+    // without its profile document.
+    console.error('[Firebase] Firestore profile creation failed, rolling back Auth user:', dbError);
+    try {
+      await deleteUser(credential.user);
+    } catch (rollbackError) {
+      console.error('[Firebase] Auth rollback (deleteUser) failed:', rollbackError);
+    }
+    throw new Error('Không thể tạo hồ sơ người dùng. Đăng ký đã được hủy, vui lòng thử lại.');
+  }
 
-  return { success: true, user: newUser, uid };
+  // Registration succeeded on BOTH Auth and Firestore. Sign out so the user
+  // must explicitly log in.
+  await signOut(auth);
+
+  return { success: true, uid, email: cleanEmail };
 };
 
-// Login User Operation with Firestore Profile Retrieval
+/**
+ * Log a user in via Firebase Auth, then load their Firestore profile.
+ * Auth and Firestore errors both propagate (no fallback, no swallowing).
+ */
 export const loginUser = async (email, password) => {
   const cleanEmail = email.trim().toLowerCase();
 
-  if (hasRealFirebaseConfig && auth) {
-    try {
-      const userCredential = await signInWithEmailAndPassword(auth, cleanEmail, password);
-      const uid = userCredential.user.uid;
-      let user = {
-        uid,
-        email: userCredential.user.email,
-        displayName: userCredential.user.displayName || cleanEmail.split('@')[0],
-        firstName: '',
-        lastName: '',
-        phone: '',
-        address: ''
-      };
+  let credential;
+  try {
+    credential = await signInWithEmailAndPassword(auth, cleanEmail, password);
+  } catch (error) {
+    throw new Error(translateFirebaseError(error.code));
+  }
 
-      // Load profile document from Firestore users/{uid}
-      if (db) {
-        try {
-          const userDoc = await getDoc(doc(db, "users", uid));
-          if (userDoc.exists()) {
-            user = { ...user, ...userDoc.data() };
-          }
-        } catch (dbErr) {
-          console.warn("Firestore getDoc warning:", dbErr);
-        }
-      }
-
-      setDemoCurrentUser(user);
-      return { success: true, user };
-    } catch (error) {
-      if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
-        throw new Error(translateFirebaseError(error.code));
-      }
-      console.warn("Live Firebase login error, falling back to local storage engine:", error);
+  const profile = await fetchUserProfile(credential.user.uid);
+  return {
+    success: true,
+    user: {
+      ...profile,
+      email: credential.user.email,
+      emailVerified: credential.user.emailVerified
     }
-  }
-
-  // Robust local storage engine fallback
-  await new Promise(res => setTimeout(res, 300));
-  const users = getDemoUsers();
-  const foundUser = users.find(u => u.email.toLowerCase() === cleanEmail);
-
-  if (!foundUser) {
-    throw new Error(translateFirebaseError('auth/user-not-found'));
-  }
-
-  setDemoCurrentUser(foundUser);
-  return { success: true, user: foundUser };
+  };
 };
 
-// Logout Operation
+/** Sign the current user out. Errors propagate to the caller. */
 export const logoutUser = async () => {
-  if (hasRealFirebaseConfig && auth && auth.currentUser) {
-    try {
-      await signOut(auth);
-    } catch (e) {}
-  }
-  setDemoCurrentUser(null);
+  await signOut(auth);
   return { success: true };
 };
 
-// Update Profile Data in Firestore and Auth
+/**
+ * Update the signed-in user's profile in Firestore (and Auth displayName).
+ * Requires an authenticated user. Firestore errors are NOT swallowed.
+ */
 export const updateUserProfileData = async (profileData) => {
-  const currentUser = getDemoCurrentUser();
-  if (!currentUser) throw new Error("Chưa đăng nhập.");
+  const user = auth.currentUser;
+  if (!user) {
+    throw new Error('Chưa đăng nhập.');
+  }
 
-  await new Promise(res => setTimeout(res, 300));
+  const derivedDisplayName =
+    profileData.firstName || profileData.lastName
+      ? `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim()
+      : undefined;
 
-  const updatedUser = {
-    ...currentUser,
+  const payload = {
     ...profileData,
-    displayName: (profileData.firstName || profileData.lastName) 
-      ? `${profileData.firstName || ''} ${profileData.lastName || ''}`.trim() 
-      : currentUser.displayName
+    ...(derivedDisplayName ? { displayName: derivedDisplayName } : {}),
+    updatedAt: new Date().toISOString()
   };
 
-  setDemoCurrentUser(updatedUser);
+  await updateDoc(doc(db, 'users', user.uid), payload);
 
-  const users = getDemoUsers();
-  const index = users.findIndex(u => u.uid === currentUser.uid);
-  if (index !== -1) {
-    users[index] = updatedUser;
-    saveDemoUsers(users);
+  if (derivedDisplayName) {
+    await updateProfile(user, { displayName: derivedDisplayName });
   }
 
-  if (hasRealFirebaseConfig && auth && auth.currentUser) {
-    try {
-      await updateProfile(auth.currentUser, {
-        displayName: updatedUser.displayName
-      });
-      if (db) {
-        await updateDoc(doc(db, "users", currentUser.uid), profileData);
-      }
-    } catch (e) {}
-  }
-
-  return { success: true, user: updatedUser };
-};
-
-export const getCurrentAuthUser = () => {
-  return getDemoCurrentUser();
+  const snap = await getDoc(doc(db, 'users', user.uid));
+  return { success: true, user: { uid: user.uid, ...snap.data() } };
 };
 
 export { auth, db };

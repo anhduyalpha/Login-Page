@@ -1,0 +1,43 @@
+# 知识卡导出索引文件
+schema_version: 1
+locale: en-US
+branch: main
+nodes_managed: true
+exported_at: "2026-07-23T01:05:39Z"
+modules:
+    "":
+        dir_name: AetherAuth — Obsidian Glass Auth Portal
+        title: AetherAuth — Obsidian Glass Auth Portal
+        scope:
+            - README.md
+            - .gitignore
+            - index.html
+            - vite.config.js
+            - package-lock.json
+            - package.json
+        source_files: []
+        children:
+            - frontend_app
+            - scripts
+        depends_on: []
+        related_to: []
+    frontend_app:
+        dir_name: React Auth Portal Frontend (Login _ Register _ Profile)
+        title: React Auth Portal Frontend (Login / Register / Profile)
+        scope:
+            - src/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: scripts
+    scripts:
+        dir_name: E2E Screenshot & Smoke-Test Scripts
+        title: E2E Screenshot & Smoke-Test Scripts
+        scope:
+            - scripts/
+        source_files: []
+        children: []
+        depends_on: []
+        related_to:
+            - path: frontend_app

@@ -7,7 +7,7 @@ export const PasswordMeter = ({ password = '', confirmPassword = '' }) => {
     { label: 'Ít nhất 8 ký tự', valid: password.length >= 8 },
     { label: '1 chữ hoa (A-Z)', valid: /[A-Z]/.test(password) },
     { label: '1 chữ thường (a-z)', valid: /[a-z]/.test(password) },
-    { label: '1 ký tự đặc biệt (!@#$...)', valid: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password) }
+    { label: '1 ký tự đặc biệt (!@#$...)', valid: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password) }
   ];
 
   const isMatch = confirmPassword.length > 0 && confirmPassword === password;

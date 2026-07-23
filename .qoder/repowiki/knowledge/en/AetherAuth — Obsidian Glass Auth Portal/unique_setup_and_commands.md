@@ -1,0 +1,1 @@
+`npm install && npm run dev` starts the app at http://localhost:3000; `npm run build` emits the production bundle; `node scripts/capture_screenshots.js` (alias `npm run capture-screenshots`) and `node scripts/verify_strict_firebase.js` are the top-level quality gates that require the dev server to be running first.

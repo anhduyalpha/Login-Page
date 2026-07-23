@@ -1,0 +1,1 @@
+Node.js utility scripts that drive a headless Chromium instance to capture UI screenshots and run end-to-end smoke tests against the locally running dev server.

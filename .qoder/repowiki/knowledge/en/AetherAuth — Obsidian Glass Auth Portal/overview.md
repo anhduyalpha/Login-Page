@@ -1,0 +1,1 @@
+Root workspace wiring a React + Vite auth SPA and its Puppeteer-based screenshot/smoke-test scripts into one npm-driven build-and-verify workflow.

@@ -1,0 +1,4 @@
+- Each script derives its own `__dirname` via `fileURLToPath(import.meta.url)` + `path.dirname` instead of relying on CommonJS globals.
+- Puppeteer browsers are launched with identical hardening flags (`headless: true`, `--no-sandbox`, `--disable-setuid-sandbox`) and pages are opened with a fixed desktop viewport of 1440×900 at `deviceScaleFactor: 2` (mobile variants switch to 375×812 with `isMobile: true`).
+- Every page lifecycle begins by clearing `localStorage` and reloading to guarantee a clean slate for screenshot/test runs.
+- DOM interactions wait for specific element selectors (e.g. `#register-email`, `#btn-submit-register`, `#success-title`) before proceeding, using `waitForSelector` with explicit timeouts for longer flows.

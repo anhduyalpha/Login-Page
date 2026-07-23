@@ -1,0 +1,1 @@
+React 19 + Vite 6 as the shared runtime; Tailwind CSS v4 via `@tailwindcss/vite` for styling across all pages; Framer Motion + Lucide React for UI motion/icons; Puppeteer 24 for the E2E scripts that automate screenshots and smoke tests against the locally running Vite server.

@@ -1,0 +1,1 @@
+Scripts expect the application to already be running on `http://localhost:3000` before invocation. Screenshots land under `docs/screenshots/` (created recursively if missing). The avatar converter reads `public/avartar.png` and overwrites `public/avatar.svg` plus `public/avartar.svg`.

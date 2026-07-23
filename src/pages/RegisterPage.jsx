@@ -9,7 +9,7 @@ import { PrimaryButton } from '../components/PrimaryButton';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 
 export const RegisterPage = () => {
-  const { register, logout, navigateTo } = useAuth();
+  const { register, navigateTo } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,7 +27,7 @@ export const RegisterPage = () => {
     password.length >= 8 &&
     /[A-Z]/.test(password) &&
     /[a-z]/.test(password) &&
-    /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password);
+    /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/.test(password);
 
   const isEmailValid = email.trim().includes('@');
 
@@ -66,10 +66,9 @@ export const RegisterPage = () => {
     }
   };
 
-  const handleModalComplete = async () => {
-    try {
-      await logout();
-    } catch (e) {}
+  const handleModalComplete = () => {
+    // registerUser already signed the user out after a successful registration;
+    // simply return them to the login screen.
     navigateTo('login');
   };
 

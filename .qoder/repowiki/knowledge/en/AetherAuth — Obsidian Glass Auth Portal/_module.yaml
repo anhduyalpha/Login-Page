@@ -1,0 +1,13 @@
+schema_version: 1
+module_path: ""
+title: AetherAuth — Obsidian Glass Auth Portal
+scope:
+    - README.md
+    - .gitignore
+    - index.html
+    - vite.config.js
+    - package-lock.json
+    - package.json
+source_files: []
+depends_on: []
+related_to: []

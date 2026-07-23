@@ -1,0 +1,1 @@
+React 18 + Vite (`import.meta.env.VITE_*`), Firebase v9 modular SDK (`firebase/app`, `firebase/auth`, `firebase/firestore`) with a localStorage-backed demo engine as offline fallback, and Framer Motion for page transitions and reduced-motion support.

@@ -25,14 +25,15 @@ export const ProfilePage = () => {
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Form Field States
-  const [firstName, setFirstName] = useState(currentUser?.firstName || 'Nguyễn Văn');
-  const [lastName, setLastName] = useState(currentUser?.lastName || 'A');
-  const [phone, setPhone] = useState(currentUser?.phone || '+84 912 345 678');
-  const [address, setAddress] = useState(currentUser?.address || 'Tầng 12, Tòa nhà Bitexco Financial Tower, Quận 1, TP. Hồ Chí Minh');
-  const [bio, setBio] = useState(currentUser?.bio || 'Lập trình viên giao diện web. Đam mê thiết kế tối giản và trải nghiệm người dùng.');
+  // Form Field States — seeded ONLY from the authenticated user's Firestore
+  // profile. No fabricated demo values.
+  const [firstName, setFirstName] = useState(currentUser?.firstName || '');
+  const [lastName, setLastName] = useState(currentUser?.lastName || '');
+  const [phone, setPhone] = useState(currentUser?.phone || '');
+  const [address, setAddress] = useState(currentUser?.address || '');
+  const [bio, setBio] = useState(currentUser?.bio || '');
 
-  const emailDisplay = currentUser?.email || 'user@example.com';
+  const emailDisplay = currentUser?.email || '';
   const fullNameDisplay = (firstName || lastName) 
     ? `${firstName} ${lastName}`.trim() 
     : (currentUser?.displayName || 'Người dùng AuthPortal');
@@ -66,11 +67,11 @@ export const ProfilePage = () => {
   };
 
   const handleCancelEdit = () => {
-    setFirstName(currentUser?.firstName || 'Nguyễn Văn');
-    setLastName(currentUser?.lastName || 'A');
-    setPhone(currentUser?.phone || '+84 912 345 678');
-    setAddress(currentUser?.address || 'Tầng 12, Tòa nhà Bitexco Financial Tower, Quận 1, TP. Hồ Chí Minh');
-    setBio(currentUser?.bio || 'Lập trình viên giao diện web. Đam mê thiết kế tối giản và trải nghiệm người dùng.');
+    setFirstName(currentUser?.firstName || '');
+    setLastName(currentUser?.lastName || '');
+    setPhone(currentUser?.phone || '');
+    setAddress(currentUser?.address || '');
+    setBio(currentUser?.bio || '');
     setIsEditing(false);
     setErrorMessage('');
   };
@@ -126,7 +127,7 @@ export const ProfilePage = () => {
 
             <button
               onClick={logout}
-              className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 border border-red-500/20 text-xs font-medium transition-colors flex items-center gap-1.5 min-h-[38px] cursor-pointer"
+              className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/20 hover:border-red-500/35 text-xs font-medium flex items-center gap-1.5 min-h-[38px] cursor-pointer transition-all duration-[180ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(239,68,68,0.15)] active:translate-y-0 active:scale-[0.97]"
               aria-label="Đăng xuất"
             >
               <LogOut className="w-3.5 h-3.5" />

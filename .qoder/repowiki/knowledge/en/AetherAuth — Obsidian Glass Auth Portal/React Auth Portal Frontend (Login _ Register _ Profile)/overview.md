@@ -1,0 +1,1 @@
+A React + Vite single-page app providing email/password authentication with login, registration, and profile pages backed by Firebase (with a local-storage demo fallback).

@@ -1,0 +1,35 @@
+rules_version = '2';
+
+// AuthPortal Firestore security rules — strict per-user isolation.
+// A signed-in user may only read/write their own users/{uid} document.
+// Everything else is denied by default.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{userId} {
+      // Only the owner (matching Firebase Auth uid) may read their profile.
+      allow read: if request.auth != null && request.auth.uid == userId;
+
+      // On create, the document id must equal the caller's uid and the
+      // payload's uid/email must match the authenticated identity.
+      allow create: if request.auth != null
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == userId
+                    && request.resource.data.email == request.auth.token.email;
+
+      // Owner may update their own profile, but can never change uid/email.
+      allow update: if request.auth != null
+                    && request.auth.uid == userId
+                    && request.resource.data.uid == resource.data.uid
+                    && request.resource.data.email == resource.data.email;
+
+      // Owner may delete their own profile document.
+      allow delete: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Deny access to any other collection/document.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
