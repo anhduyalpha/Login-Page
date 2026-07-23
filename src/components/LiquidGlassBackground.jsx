@@ -347,9 +347,9 @@ export const LiquidGlassBackground = () => {
 
   const MAX_RIPPLES = 6;
   const RIPPLE_DURATION = 1200; // ms
-  const HOVER_RIPPLE_INTERVAL = 90; // ms
-  const HOVER_RIPPLE_DISTANCE = 10; // px
-  const HOVER_RIPPLE_STRENGTH = 0.65;
+  const HOVER_RIPPLE_INTERVAL = 72; // ms
+  const HOVER_RIPPLE_DISTANCE = 7; // px
+  const HOVER_RIPPLE_STRENGTH = 0.88;
 
   const initWebGL = useCallback(() => {
     const canvas = canvasRef.current;
