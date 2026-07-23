@@ -135,20 +135,20 @@ void main() {
     vec2 diff = p - pointerUV;
     float dist = length(diff);
     
-    // Influence radius ~120px normalized
-    float radius = 0.14;
+    // Wider local water response around the pointer
+    float radius = 0.175;
     float influence = smoothstep(radius, 0.0, dist);
     
-    // Displacement based on pointer velocity (inertia feel)
-    vec2 velDir = u_pointerVel * 0.008;
+    // Stronger velocity-based inertia while preserving the same model
+    vec2 velDir = u_pointerVel * 0.0095;
     float velMag = length(velDir);
-    velMag = min(velMag, 0.012); // Clamp max displacement
+    velMag = min(velMag, 0.015); // Clamp max displacement
     
-    displacement += normalize(diff + 0.001) * influence * velMag * 2.0;
-    displacement += velDir * influence * 1.5;
+    displacement += normalize(diff + 0.001) * influence * velMag * 2.6;
+    displacement += velDir * influence * 1.95;
     
-    // Subtle local depression
-    displacement -= diff * influence * 0.015;
+    // Deeper local depression for a more tactile water response
+    displacement -= diff * influence * 0.0195;
   }
   
   // ─── Click Ripples ─────────────────────────────────────────────────────────
@@ -347,9 +347,10 @@ export const LiquidGlassBackground = () => {
 
   const MAX_RIPPLES = 6;
   const RIPPLE_DURATION = 1200; // ms
-  const HOVER_RIPPLE_INTERVAL = 72; // ms
-  const HOVER_RIPPLE_DISTANCE = 7; // px
-  const HOVER_RIPPLE_STRENGTH = 0.88;
+  const HOVER_RIPPLE_INTERVAL = 58; // ms
+  const HOVER_RIPPLE_DISTANCE = 5; // px
+  const HOVER_RIPPLE_MIN_STRENGTH = 1.2;
+  const HOVER_RIPPLE_MAX_STRENGTH = 2.0;
 
   const initWebGL = useCallback(() => {
     const canvas = canvasRef.current;
@@ -550,9 +551,10 @@ export const LiquidGlassBackground = () => {
 
       const rippleNow = Date.now();
       const lastHover = lastHoverRippleRef.current;
-      const dx = lastHover.x === null ? Infinity : e.clientX - lastHover.x;
-      const dy = lastHover.y === null ? Infinity : e.clientY - lastHover.y;
-      const distance = Math.hypot(dx, dy);
+      const dx = lastHover.x === null ? 0 : e.clientX - lastHover.x;
+      const dy = lastHover.y === null ? 0 : e.clientY - lastHover.y;
+      const distance = lastHover.x === null ? Infinity : Math.hypot(dx, dy);
+      const elapsed = Math.max(rippleNow - lastHover.time, HOVER_RIPPLE_INTERVAL);
 
       if (
         rippleNow - lastHover.time >= HOVER_RIPPLE_INTERVAL &&
@@ -564,10 +566,22 @@ export const LiquidGlassBackground = () => {
           ripplesRef.current.splice(oldestHoverIndex, 1);
         }
 
+        const pointerSpeed = lastHover.x === null ? 0.25 : distance / elapsed;
+        const strength = Math.min(
+          HOVER_RIPPLE_MAX_STRENGTH,
+          HOVER_RIPPLE_MIN_STRENGTH + pointerSpeed * 0.9,
+        );
+        const wakeOffset = Math.min(0.28, 0.12 + pointerSpeed * 0.06);
+        const rippleClientX = e.clientX - dx * wakeOffset;
+        const rippleClientY = e.clientY - dy * wakeOffset;
+        const rippleX = Math.min(1, Math.max(0, (rippleClientX - rect.left) / rect.width));
+        const rippleY = Math.min(1, Math.max(0, 1.0 - (rippleClientY - rect.top) / rect.height));
+
         ripplesRef.current.push({
-          x, y,
+          x: rippleX,
+          y: rippleY,
           start: rippleNow,
-          strength: HOVER_RIPPLE_STRENGTH,
+          strength,
           source: 'hover',
         });
 
