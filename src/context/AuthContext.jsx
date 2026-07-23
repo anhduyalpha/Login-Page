@@ -44,6 +44,7 @@ export const AuthProvider = ({ children }) => {
           const profile = await fetchUserProfile(user.uid);
           setCurrentUser({
             ...profile,
+            photoURL: profile.photoURL || user.photoURL || '',
             email: user.email,
             emailVerified: user.emailVerified
           });
@@ -105,11 +106,16 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const handleUpdateProfile = async (profileData) => {
+  const handleUpdateProfile = async (profileData, avatarOptions = {}) => {
     try {
-      const res = await updateUserProfileData(profileData);
+      const res = await updateUserProfileData(profileData, avatarOptions);
       setCurrentUser((prev) => ({ ...prev, ...res.user }));
-      showToast('Cập nhật thông tin cá nhân thành công!', 'success');
+      showToast(
+        avatarOptions.avatarFile
+          ? 'Ảnh đại diện và thông tin cá nhân đã được cập nhật!'
+          : 'Cập nhật thông tin cá nhân thành công!',
+        'success'
+      );
       return res;
     } catch (err) {
       console.error('[Auth] Profile update failed:', err);

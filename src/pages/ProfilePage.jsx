@@ -1,20 +1,38 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { validateAvatarFileContent } from '../services/firebase';
 import { PrimaryButton, SecondaryButton } from '../components/PrimaryButton';
 import { AlertMessage } from '../components/AlertMessage';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  FileText, 
-  Edit3, 
-  Save, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  FileText,
+  Edit3,
+  Save,
   LogOut,
   ShieldCheck,
-  Check
+  Check,
+  Camera
 } from 'lucide-react';
+
+const getInitials = (profile) => {
+  const parts = [profile?.firstName, profile?.lastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length > 0) {
+    return parts.slice(0, 2).map((part) => part[0]).join('').toUpperCase();
+  }
+
+  const fallback = profile?.displayName || profile?.email?.split('@')[0] || 'U';
+  return fallback.slice(0, 2).toUpperCase();
+};
 
 export const ProfilePage = () => {
   const { currentUser, updateProfile, logout } = useAuth();
@@ -24,6 +42,14 @@ export const ProfilePage = () => {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState('');
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const avatarInputRef = useRef(null);
+  const mountedRef = useRef(true);
+  const selectionRequestRef = useRef(0);
+  const successTimeoutRef = useRef(null);
 
   // Form Field States — seeded ONLY from the authenticated user's Firestore
   // profile. No fabricated demo values.
@@ -34,51 +60,155 @@ export const ProfilePage = () => {
   const [bio, setBio] = useState(currentUser?.bio || '');
 
   const emailDisplay = currentUser?.email || '';
-  const fullNameDisplay = (firstName || lastName) 
-    ? `${firstName} ${lastName}`.trim() 
+  const fullNameDisplay = (firstName || lastName)
+    ? `${firstName} ${lastName}`.trim()
     : (currentUser?.displayName || 'Người dùng AuthPortal');
+  const avatarUrl = avatarPreviewUrl || currentUser?.photoURL || '';
+  const avatarInitials = getInitials({
+    ...currentUser,
+    firstName,
+    lastName,
+    email: emailDisplay
+  });
 
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      selectionRequestRef.current += 1;
+      if (successTimeoutRef.current) {
+        window.clearTimeout(successTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    setAvatarLoadFailed(false);
+  }, [currentUser?.photoURL, avatarPreviewUrl]);
+
+  useEffect(() => () => {
+    if (avatarPreviewUrl) {
+      URL.revokeObjectURL(avatarPreviewUrl);
+    }
+  }, [avatarPreviewUrl]);
+
+  const clearAvatarSelection = () => {
+    selectionRequestRef.current += 1;
+    setSelectedAvatarFile(null);
+    setAvatarPreviewUrl('');
+    setUploadProgress(0);
+    setAvatarLoadFailed(false);
+    if (avatarInputRef.current) {
+      avatarInputRef.current.value = '';
+    }
+  };
+
+  const handleAvatarSelection = async (event) => {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    const requestId = selectionRequestRef.current + 1;
+    selectionRequestRef.current = requestId;
+    const validationError = await validateAvatarFileContent(file);
+
+    if (!mountedRef.current || requestId !== selectionRequestRef.current) return;
+
+    if (validationError) {
+      setErrorMessage(validationError);
+      input.value = '';
+      return;
+    }
+
+    setErrorMessage('');
+    setSuccessMessage('');
+    setSelectedAvatarFile(file);
+    setAvatarPreviewUrl(URL.createObjectURL(file));
+    setAvatarLoadFailed(false);
+    setUploadProgress(0);
+  };
+
+  const handleSaveProfile = async (event) => {
+    event.preventDefault();
+    if (saving) return;
+
+    if (successTimeoutRef.current) {
+      window.clearTimeout(successTimeoutRef.current);
+      successTimeoutRef.current = null;
+    }
+
     setSaving(true);
+    setSaveSuccess(false);
     setSuccessMessage('');
     setErrorMessage('');
+    setUploadProgress(0);
 
     try {
-      await updateProfile({
-        firstName,
-        lastName,
-        phone,
-        address,
-        bio,
-        updatedAt: new Date().toISOString()
-      });
+      await updateProfile(
+        {
+          firstName,
+          lastName,
+          phone,
+          address,
+          bio,
+          updatedAt: new Date().toISOString()
+        },
+        selectedAvatarFile
+          ? {
+              avatarFile: selectedAvatarFile,
+              previousPhotoPath: currentUser?.photoPath || '',
+              onProgress: (progress) => {
+                if (mountedRef.current) setUploadProgress(progress);
+              }
+            }
+          : {}
+      );
+
+      if (!mountedRef.current) return;
+
+      const avatarWasUpdated = Boolean(selectedAvatarFile);
+      clearAvatarSelection();
       setSaveSuccess(true);
-      setSuccessMessage('Cập nhật thông tin cá nhân thành công!');
-      setTimeout(() => {
+      setSuccessMessage(
+        avatarWasUpdated
+          ? 'Ảnh đại diện và thông tin cá nhân đã được cập nhật!'
+          : 'Cập nhật thông tin cá nhân thành công!'
+      );
+      successTimeoutRef.current = window.setTimeout(() => {
+        if (!mountedRef.current) return;
         setSaveSuccess(false);
         setIsEditing(false);
+        successTimeoutRef.current = null;
       }, 500);
     } catch (err) {
-      setErrorMessage(err.message || 'Không thể cập nhật thông tin. Vui lòng thử lại.');
+      if (mountedRef.current) {
+        setErrorMessage(err.message || 'Không thể cập nhật thông tin. Vui lòng thử lại.');
+      }
     } finally {
-      setSaving(false);
+      if (mountedRef.current) setSaving(false);
     }
   };
 
   const handleCancelEdit = () => {
+    if (saving) return;
+    if (successTimeoutRef.current) {
+      window.clearTimeout(successTimeoutRef.current);
+      successTimeoutRef.current = null;
+    }
     setFirstName(currentUser?.firstName || '');
     setLastName(currentUser?.lastName || '');
     setPhone(currentUser?.phone || '');
     setAddress(currentUser?.address || '');
     setBio(currentUser?.bio || '');
+    clearAvatarSelection();
     setIsEditing(false);
     setErrorMessage('');
+    setSuccessMessage('');
   };
 
   return (
     <div className="w-full max-w-2xl mx-auto space-y-6">
-      
+
       {/* Messages */}
       {successMessage && <AlertMessage type="success" message={successMessage} />}
       {errorMessage && <AlertMessage type="error" message={errorMessage} />}
@@ -86,14 +216,78 @@ export const ProfilePage = () => {
       {/* Header Profile Identity Glass Card */}
       <div className="p-6 sm:p-8 glass-level-1 space-y-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6 text-center sm:text-left">
-          
+
           <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="w-20 h-20 rounded-full border border-white/20 p-1 bg-[#111111] shrink-0">
-              <img 
-                src="/avatar.svg" 
-                alt="Avatar" 
-                className="w-full h-full object-cover rounded-full" 
+            <div className="flex flex-col items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => isEditing && avatarInputRef.current?.click()}
+                disabled={!isEditing || saving}
+                aria-label={isEditing ? 'Đổi ảnh đại diện' : `Ảnh đại diện của ${fullNameDisplay}`}
+                className={`group relative w-20 h-20 rounded-full border border-white/20 p-1 bg-[#111111] overflow-hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 focus-visible:ring-offset-2 focus-visible:ring-offset-[#111111] transition-all duration-200 ${
+                  isEditing
+                    ? 'cursor-pointer hover:border-white/40 hover:shadow-[0_0_20px_rgba(255,255,255,0.08)]'
+                    : 'cursor-default'
+                }`}
+              >
+                {avatarUrl && !avatarLoadFailed ? (
+                  <img
+                    src={avatarUrl}
+                    alt={`Ảnh đại diện của ${fullNameDisplay}`}
+                    className="w-full h-full object-cover rounded-full"
+                    onError={() => setAvatarLoadFailed(true)}
+                  />
+                ) : (
+                  <span
+                    className="w-full h-full rounded-full flex items-center justify-center bg-white/10 text-[#f5f5f5] text-xl font-semibold tracking-wide"
+                    aria-label={`Chữ viết tắt ${avatarInitials}`}
+                  >
+                    {avatarInitials}
+                  </span>
+                )}
+
+                {isEditing && (
+                  <span className="absolute inset-1 rounded-full bg-black/45 flex items-center justify-center opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity">
+                    <Camera className="w-5 h-5 text-white" aria-hidden="true" />
+                  </span>
+                )}
+              </button>
+
+              <input
+                ref={avatarInputRef}
+                id="input-avatar"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleAvatarSelection}
+                disabled={saving}
+                className="sr-only"
+                aria-label="Chọn ảnh đại diện JPG, PNG hoặc WebP"
               />
+
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={() => avatarInputRef.current?.click()}
+                  disabled={saving}
+                  className="min-h-[44px] px-2 text-xs font-medium text-[#d4d4d4] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-white/70 transition-colors"
+                >
+                  Đổi ảnh đại diện
+                </button>
+              )}
+
+              {isEditing && selectedAvatarFile && (
+                <p className="max-w-40 text-[11px] text-[#a3a3a3] truncate" title={selectedAvatarFile.name}>
+                  {selectedAvatarFile.name}
+                </p>
+              )}
+
+              <div className="min-h-4" aria-live="polite" aria-atomic="true">
+                {saving && selectedAvatarFile && (
+                  <p className="text-[11px] text-[#d4d4d4]">
+                    Đang tải ảnh... {uploadProgress}%
+                  </p>
+                )}
+              </div>
             </div>
 
             <div className="space-y-1">
@@ -120,14 +314,15 @@ export const ProfilePage = () => {
                 <span>Chỉnh sửa</span>
               </SecondaryButton>
             ) : (
-              <SecondaryButton onClick={handleCancelEdit}>
+              <SecondaryButton onClick={handleCancelEdit} disabled={saving}>
                 <span>Hủy</span>
               </SecondaryButton>
             )}
 
             <button
               onClick={logout}
-              className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/20 hover:border-red-500/35 text-xs font-medium flex items-center gap-1.5 min-h-[38px] cursor-pointer transition-all duration-[180ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(239,68,68,0.15)] active:translate-y-0 active:scale-[0.97]"
+              disabled={saving}
+              className="px-3 py-2 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-red-500/20 hover:border-red-500/35 text-xs font-medium flex items-center gap-1.5 min-h-[38px] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-[180ms] ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-px hover:shadow-[0_4px_12px_rgba(239,68,68,0.15)] active:translate-y-0 active:scale-[0.97]"
               aria-label="Đăng xuất"
             >
               <LogOut className="w-3.5 h-3.5" />
@@ -152,7 +347,7 @@ export const ProfilePage = () => {
 
         <form onSubmit={handleSaveProfile} className="space-y-5">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            
+
             {/* Field 1: Họ và tên đệm */}
             <div>
               <label className="block text-xs font-medium text-[#a3a3a3] mb-1.5">
@@ -165,7 +360,7 @@ export const ProfilePage = () => {
                       id="input-first-name"
                       type="text"
                       value={firstName}
-                      onChange={(e) => setFirstName(e.target.value)}
+                      onChange={(event) => setFirstName(event.target.value)}
                       placeholder="VD: Nguyễn Văn"
                       className="form-input w-full py-2 px-3 text-sm"
                     />
@@ -190,7 +385,7 @@ export const ProfilePage = () => {
                       id="input-last-name"
                       type="text"
                       value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
+                      onChange={(event) => setLastName(event.target.value)}
                       placeholder="VD: A"
                       className="form-input w-full py-2 px-3 text-sm"
                     />
@@ -226,7 +421,7 @@ export const ProfilePage = () => {
                       id="input-phone"
                       type="text"
                       value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
+                      onChange={(event) => setPhone(event.target.value)}
                       placeholder="+84 912 345 678"
                       className="form-input w-full py-2 px-3 text-sm"
                     />
@@ -254,7 +449,7 @@ export const ProfilePage = () => {
                     id="input-address"
                     rows={2}
                     value={address}
-                    onChange={(e) => setAddress(e.target.value)}
+                    onChange={(event) => setAddress(event.target.value)}
                     placeholder="Nhập địa chỉ"
                     className="form-input w-full py-2 px-3 text-sm resize-none"
                   />
@@ -280,7 +475,7 @@ export const ProfilePage = () => {
                     id="input-bio"
                     rows={3}
                     value={bio}
-                    onChange={(e) => setBio(e.target.value)}
+                    onChange={(event) => setBio(event.target.value)}
                     placeholder="Nhập phần giới thiệu ngắn..."
                     className="form-input w-full py-2 px-3 text-sm resize-none"
                   />
@@ -297,14 +492,15 @@ export const ProfilePage = () => {
           {/* Edit action controls */}
           {isEditing && (
             <div className="flex items-center justify-end gap-3 pt-3 border-t border-white/10">
-              <SecondaryButton onClick={handleCancelEdit}>
+              <SecondaryButton onClick={handleCancelEdit} disabled={saving}>
                 Hủy
               </SecondaryButton>
-              <PrimaryButton 
-                id="btn-submit-save-profile" 
-                type="submit" 
-                loading={saving} 
+              <PrimaryButton
+                id="btn-submit-save-profile"
+                type="submit"
+                loading={saving}
                 success={saveSuccess}
+                disabled={saving}
                 className="w-auto px-5"
               >
                 {saveSuccess ? (
