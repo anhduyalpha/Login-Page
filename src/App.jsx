@@ -2,7 +2,6 @@ import React from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AuthLayout } from './components/AuthLayout';
 import { NotificationToast } from './components/NotificationToast';
-import { LiquidHoverRippleBridge } from './components/LiquidHoverRippleBridge';
 import { RegisterPage } from './pages/RegisterPage';
 import { LoginPage } from './pages/LoginPage';
 import { ProfilePage } from './pages/ProfilePage';
@@ -105,7 +104,6 @@ const MainContent = () => {
 export default function App() {
   return (
     <AuthProvider>
-      <LiquidHoverRippleBridge />
       <MainContent />
     </AuthProvider>
   );
